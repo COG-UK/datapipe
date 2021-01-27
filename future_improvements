@@ -1,2 +1,4 @@
 - preprocess_cog_uk takes a file of updated dates: could this be fed back into majora so
 no longer needed?
+- omissions file: is it really necessary still?
+- what is best practice: add lots of inputs, or have global params used by processes and minimal inputs?

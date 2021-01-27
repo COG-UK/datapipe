@@ -37,8 +37,9 @@ process uk_add_columns_to_metadata {
     /**
     * Takes the MAJORA TSV of metadata and adds/updates columns for sample_date, pillar_2,
     * sequence_name, covv_accession_id, edin_epi_week, edin_epi_day and adm0
-    * @input uk_metadata, uk_accessions, uk_updated_dates
+    * @input uk_metadata
     * @output uk_metadata_updated
+    * @params uk_accessions, uk_updated_dates
     */
 
     input:
@@ -63,12 +64,14 @@ process uk_filter_omitted_sequences {
     /**
     * Takes a FASTA and METADATA and excludes samples specified in an exclusion file
     * sequence_name, covv_accession_id, edin_epi_week, edin_epi_day and adm0
-    * @input uk_fasta, uk_metadata, uk_omissions
+    * @input uk_fasta, uk_metadata
     * @output uk_fasta_updated, uk_metadata_updated
+    * @params uk_omissions
     */
     input:
     file uk_fasta
     file uk_metadata
+    file uk_omissions
 
     output:
     path "${uk_fasta.baseName}.omit_filtered.fa", emit: fasta
@@ -115,8 +118,9 @@ process uk_filter_on_sample_date {
     /**
     * If a time window (in days) is provided, excludes samples from FASTA and
     * METADATA files which do not fall within X days of date
-    * @input uk_fasta, uk_metadata, time_window, date
+    * @input uk_fasta, uk_metadata
     * @output uk_fasta_update, uk_metadata_updated
+    * @params time_window, date
     */
 
     input:
@@ -135,12 +139,12 @@ process uk_filter_on_sample_date {
         from Bio import SeqIO
         import csv
 
-        indexed_fasta = SeqIO.index(str(input.fasta), "fasta")
+        indexed_fasta = SeqIO.index("${uk_fasta}", "fasta")
 
-        window = datetime.timedelta(int(input.time_window))
-        todays_date = datetime.datetime.strptime(str(input.date), '%Y-%m-%d').date()
+        window = datetime.timedelta(int("${params.time_window}"))
+        todays_date = datetime.datetime.strptime("${params.date}", '%Y-%m-%d').date()
 
-        with open(str(input.metadata), 'r', newline = '') as csv_in, \
+        with open"${uk_metadata}", 'r', newline = '') as csv_in, \
             open("${uk_metadata.baseName}.date_filtered.csv", 'w', newline = '') as csv_out, \
             open("${uk_fasta.baseName}.date_filtered.fa", "w") as fasta_out:
 
@@ -176,10 +180,11 @@ workflow preprocess_cog_uk {
         uk_metadata
         uk_accessions
         uk_updated_dates
+        uk_omissions
     main:
         uk_strip_header_digits(uk_fasta)
         uk_add_columns_to_metadata(uk_metadata, uk_accessions, uk_updated_dates)
-        uk_filter_omitted_sequences(uk_strip_header_digits.out, uk_add_columns_to_metadata.out)
+        uk_filter_omitted_sequences(uk_strip_header_digits.out, uk_add_columns_to_metadata.out, uk_omissions)
         uk_filter_on_sample_date(uk_filter_omitted_sequences.out.fasta, uk_filter_omitted_sequences.out.metadata)
     emit:
         uk_filter_on_sample_date.out.fasta
@@ -198,5 +203,6 @@ workflow {
     preprocess_cog_uk(params.uk_fasta,
                       params.uk_metadata,
                       params.uk_accessions,
-                      params.uk_updated_dates)
+                      params.uk_updated_dates,
+                      params.uk_omissions)
 }
