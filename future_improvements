@@ -2,3 +2,5 @@
 no longer needed?
 - omissions file: is it really necessary still?
 - what is best practice: add lots of inputs, or have global params used by processes and minimal inputs?
+- Lots of very similar looking python scripts within processes - these were fastafunks, but were replaced
+to speed up. Could instead speed up fastafunk in the same way.
