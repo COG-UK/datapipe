@@ -3,6 +3,7 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
+includeConfig 'config/base.config'
 
 
 process uk_annotate_with_unmapped_genome_completeness {
@@ -185,7 +186,10 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
     * Where duplicate root_biosample, keeps the most complete
     * @input uk_fasta, uk_metadata
     * @output uk_fasta_updated, uk_metadata_updated
+    * @params date
     */
+
+    publishDir "${params.export_dir}/alignments/", pattern: "*.fa", mode: 'copy', saveAs: {"cog_${params.date}_all.fasta"}
 
     input:
     file uk_fasta
@@ -249,6 +253,7 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
     """
 }
 
+
 workflow deduplicate_cog_uk {
     take:
         uk_fasta
@@ -259,12 +264,10 @@ workflow deduplicate_cog_uk {
         uk_remove_duplicates_biosamplesourceid_by_date(uk_remove_duplicates_COGID_by_proportionN.out.uk_fasta_updated, uk_remove_duplicates_COGID_by_proportionN.out.uk_metadata_updated)
         uk_remove_duplicates_rootbiosample_by_gaps(uk_remove_duplicates_biosamplesourceid_by_date.out.uk_fasta_updated, uk_remove_duplicates_biosamplesourceid_by_date.out.uk_metadata_updated)
     emit:
-        uk_remove_duplicates_rootbiosample_by_gaps.out.uk_fasta_updated
-        uk_remove_duplicates_rootbiosample_by_gaps.out.uk_metadata_updated
+        fasta = uk_remove_duplicates_rootbiosample_by_gaps.out.uk_fasta_updated
+        metadata = uk_remove_duplicates_rootbiosample_by_gaps.out.uk_metadata_updated
 }
 
-params.uk_fasta = file("test/matched.fa")
-params.uk_metadata = file("test/matched.csv")
 
 workflow {
     deduplicate_cog_uk(params.uk_fasta, params.uk_metadata)

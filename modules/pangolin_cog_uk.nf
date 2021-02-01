@@ -3,6 +3,7 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
+includeConfig 'config/base.config'
 
 
 process extract_sequences_for_pangolin {
@@ -156,11 +157,6 @@ workflow pangolin_cog_uk {
     emit:
         uk_add_new_pangolin_lineages_to_metadata.out
 }
-
-params.uk_fasta = file("test/matched.fa")
-params.uk_metadata = file("test/matched.csv")
-params.uk_previous_metadata = ""
-params.update_all_lineage_assignments = false
 
 
 workflow {

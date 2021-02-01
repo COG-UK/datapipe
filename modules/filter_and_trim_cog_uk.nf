@@ -3,6 +3,7 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
+includeConfig 'config/base.config'
 
 
 process uk_filter_low_coverage_sequences {
@@ -123,25 +124,16 @@ workflow filter_and_trim_cog_uk {
     take:
         uk_fasta
         uk_metadata
-        uk_mask_file
     main:
         uk_filter_low_coverage_sequences(uk_fasta, uk_metadata)
         uk_mask_alignment(uk_filter_low_coverage_sequences.out.uk_fasta_updated)
         uk_trim_alignment(uk_mask_alignment.out)
     emit:
-        uk_trim_alignment.out
-        uk_filter_low_coverage_sequences.out.uk_metadata_updated
+        fasta = uk_trim_alignment.out
+        metadata = uk_filter_low_coverage_sequences.out.uk_metadata_updated
 }
-
-params.uk_fasta = file("test/matched.fa")
-params.uk_metadata = file("test/matched.tsv")
-params.uk_mask_file = file("resources/uk_mask.csv")
-params.min_covg = false
-params.trim_start = false
-params.trim_end = false
 
 workflow {
     filter_and_trim_cog_uk(params.uk_fasta,
-                           params.uk_metadata,
-                           params.uk_mask_file)
+                           params.uk_metadata)
 }

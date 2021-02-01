@@ -3,6 +3,7 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
+includeConfig 'config/base.config'
 
 
 process uk_strip_header_digits {
@@ -179,31 +180,18 @@ workflow preprocess_cog_uk {
     take:
         uk_fasta
         uk_metadata
-        uk_accessions
-        uk_updated_dates
-        uk_omissions
     main:
         uk_strip_header_digits(uk_fasta)
         uk_add_columns_to_metadata(uk_metadata, uk_accessions, uk_updated_dates)
         uk_filter_omitted_sequences(uk_strip_header_digits.out, uk_add_columns_to_metadata.out, uk_omissions)
         uk_filter_on_sample_date(uk_filter_omitted_sequences.out.fasta, uk_filter_omitted_sequences.out.metadata)
     emit:
-        uk_filter_on_sample_date.out.fasta
-        uk_filter_on_sample_date.out.metadata
+        fasta = uk_filter_on_sample_date.out.fasta
+        metadata = uk_filter_on_sample_date.out.metadata
 }
 
-params.uk_fasta = file("test/matched.fa")
-params.uk_metadata = file("test/matched.tsv")
-params.uk_accessions = file("test/accessions.tsv")
-params.uk_updated_dates = ""
-params.uk_omissions = ""
-params.time_window = false
-params.date = false
 
 workflow {
     preprocess_cog_uk(params.uk_fasta,
-                      params.uk_metadata,
-                      params.uk_accessions,
-                      params.uk_updated_dates,
-                      params.uk_omissions)
+                      params.uk_metadata)
 }

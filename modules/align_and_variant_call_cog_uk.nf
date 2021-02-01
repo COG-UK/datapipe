@@ -3,6 +3,7 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
+includeConfig 'config/base.config'
 
 
 process uk_minimap2_to_reference {
@@ -149,10 +150,6 @@ workflow align_and_variant_call_cog_uk {
     take:
         uk_fasta
         uk_metadata
-        uk_reference_fasta
-        uk_reference_genbank
-        aas
-        dels
     main:
         uk_minimap2_to_reference(uk_fasta)
         uk_get_variants(uk_minimap2_to_reference.out)
@@ -164,22 +161,12 @@ workflow align_and_variant_call_cog_uk {
         uk_get_variants.out
         uk_get_indels.out.uk_insertions
         uk_get_indels.out.uk_deletions
-        uk_alignment.out
-        type_AAs_and_dels.out
+        fasta = uk_alignment.out
+        metadata = type_AAs_and_dels.out
 }
 
-params.uk_fasta = file("test/matched.fa")
-params.uk_metadata = file("test/matched.csv")
-params.reference_fasta = file("resources/MN908947.fa")
-params.reference_genbank = file("resources/MN908947.gb")
-params.aas = false
-params.dels = false
 
 workflow {
     align_and_variant_call_cog_uk(params.uk_fasta,
-                                  params.uk_metadata,
-                                  params.reference_fasta,
-                                  params.reference_genbank,
-                                  params.aas,
-                                  params.dels)
+                                  params.uk_metadata)
 }
