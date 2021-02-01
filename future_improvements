@@ -4,3 +4,8 @@ no longer needed?
 - what is best practice: add lots of inputs, or have global params used by processes and minimal inputs?
 - Lots of very similar looking python scripts within processes - these were fastafunks, but were replaced
 to speed up. Could instead speed up fastafunk in the same way.
+- what should desired result be if missing input files e.g. list of aas/dels to search for and add to metadata table.
+Set up now to skip that step
+- Used to retain info week to week about which samples were eliminated as duplicates - this is now done denovo each week
+ as a result of Ben's changes
+- Used to have min length and min covg thresholds, now have just one lower min_covg threshold, chase why

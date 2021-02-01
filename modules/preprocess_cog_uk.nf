@@ -80,6 +80,7 @@ process uk_filter_omitted_sequences {
     script:
     if ( params.uk_omissions )
         """
+        #!/usr/bin/env python3
         from Bio import SeqIO
         import csv
 
