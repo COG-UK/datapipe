@@ -15,8 +15,8 @@ process uk_filter_low_coverage_sequences {
     */
 
     input:
-    file uk_alignment
-    file uk_metadata
+    path uk_alignment
+    path uk_metadata
 
     output:
     path "${uk_alignment.baseName}.low_covg_filtered.fasta", emit: uk_fasta_updated
@@ -68,7 +68,7 @@ process uk_trim_alignment {
     */
 
     input:
-    file uk_alignment
+    path uk_alignment
 
     output:
     path "${uk_alignment.baseName}.trimmed.fa"
@@ -108,8 +108,8 @@ process publish_filtered_aligned_cog_data {
     publishDir "${publish_dir}/alignments/", pattern: "*.csv", mode: 'copy', saveAs: {"cog_${params.date}_metadata.fasta"}
 
     input:
-    file uk_alignment
-    file uk_metadata
+    path uk_alignment
+    path uk_metadata
 
     output:
     path "${uk_alignment.baseName}.matched.fa"

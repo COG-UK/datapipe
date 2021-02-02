@@ -23,11 +23,11 @@ workflow process_cog_uk {
 }
 
 workflow {
-    uk_fasta = file(params.uk_fasta)
-    uk_metadata = file(params.uk_metadata)
-    uk_accessions = file(params.uk_accessions)
+    ch_uk_fasta = Channel.fromPath(params.uk_fasta)
+    ch_uk_metadata = Channel.fromPath(params.uk_metadata)
+    ch_uk_accessions = Channel.fromPath(params.uk_accessions)
 
-    process_cog_uk(uk_fasta,
-                   uk_metadata,
-                   uk_accessions)
+    process_cog_uk(ch_uk_fasta,
+                   ch_uk_metadata,
+                   ch_uk_accessions)
 }

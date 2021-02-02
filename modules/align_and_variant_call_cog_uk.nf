@@ -17,7 +17,7 @@ process uk_minimap2_to_reference {
     cpus 1
 
     input:
-    file uk_fasta
+    path uk_fasta
 
     output:
     path "uk_alignment.sam"
@@ -39,7 +39,7 @@ process uk_get_variants {
     cpus 1
 
     input:
-    file uk_sam
+    path uk_sam
 
     output:
     path "uk.variants.csv"
@@ -64,7 +64,7 @@ process uk_get_indels {
     publishDir "${publish_dir}/metadata/", pattern: "*.csv", mode: 'copy'
 
     input:
-    file uk_sam
+    path uk_sam
 
     output:
     path "uk.insertions.csv", emit: uk_insertions
@@ -91,7 +91,7 @@ process uk_alignment {
     cpus 1
 
     input:
-    file uk_sam
+    path uk_sam
 
     output:
     path "uk_alignment.fasta"
@@ -115,7 +115,7 @@ process uk_mask_alignment {
     */
 
     input:
-    file uk_alignment
+    path uk_alignment
 
     output:
     path "${uk_alignment.baseName}.masked.fa"
@@ -139,7 +139,7 @@ process uk_get_snps {
     */
 
     input:
-    file uk_alignment
+    path uk_alignment
 
     output:
     path "uk.snps.csv"
@@ -159,8 +159,8 @@ process uk_type_AAs_and_dels {
     */
 
     input:
-    file uk_alignment
-    file uk_metadata
+    path uk_alignment
+    path uk_metadata
 
     output:
     path "${uk_metadata.baseName}.typed.csv"
@@ -189,8 +189,8 @@ process publish_full_aligned_cog_data {
 
 
     input:
-    file uk_alignment
-    file uk_metadata
+    path uk_alignment
+    path uk_metadata
 
     output:
     path "${uk_alignment.baseName}.matched.fa"

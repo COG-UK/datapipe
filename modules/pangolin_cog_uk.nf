@@ -16,8 +16,8 @@ process extract_sequences_for_pangolin {
     */
 
     input:
-    file uk_fasta
-    file uk_metadata
+    path uk_fasta
+    path uk_metadata
 
     output:
     path "${uk_fasta.baseName}.for_pangolin.fasta", emit: pangolin_fasta
@@ -86,7 +86,7 @@ process uk_pangolin {
     */
 
     input:
-    file uk_fasta
+    path uk_fasta
 
     output:
     path "pangolin/lineage_report.csv"
@@ -107,8 +107,8 @@ process uk_add_new_pangolin_lineages_to_metadata {
     */
 
     input:
-    file uk_metadata
-    file pangolin_csv
+    path uk_metadata
+    path pangolin_csv
 
     output:
     path "${uk_metadata.baseName}.with_pangolin.csv"
@@ -155,7 +155,7 @@ workflow pangolin_cog_uk {
         uk_pangolin(extract_sequences_for_pangolin.out.pangolin_fasta)
         uk_add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, uk_pangolin.out)
     emit:
-        uk_add_new_pangolin_lineages_to_metadata.out
+        metadata = uk_add_new_pangolin_lineages_to_metadata.out
 }
 
 

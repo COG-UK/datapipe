@@ -20,6 +20,7 @@ dependencies:
   - r-base=3.5.1
   - r-networkd3
   - jclusterfunk
+  - benjamincjackson::gofasta=v0.0.3
   - pip:
       - git+https://github.com/COG-UK/phylo-reports.git
       - git+https://github.com/cov-lineages/pangolin.git

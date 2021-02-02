@@ -13,10 +13,10 @@ process uk_strip_header_digits {
     */
 
     input:
-    file uk_fasta
+    path uk_fasta
 
     output:
-    file "${uk_fasta.baseName}.header_stripped.fasta"
+    path "${uk_fasta.baseName}.header_stripped.fasta"
 
     script:
     """
@@ -43,12 +43,12 @@ process uk_add_columns_to_metadata {
     */
 
     input:
-    file uk_metadata
-    file uk_accessions
-    file uk_updated_dates
+    path uk_metadata
+    path uk_accessions
+    path uk_updated_dates
 
     output:
-    file "${uk_metadata.baseName}.updated.csv"
+    path "${uk_metadata.baseName}.updated.csv"
 
     script:
     """
@@ -69,9 +69,9 @@ process uk_filter_omitted_sequences {
     * @params uk_omissions
     */
     input:
-    file uk_fasta
-    file uk_metadata
-    file uk_omissions
+    path uk_fasta
+    path uk_metadata
+    path uk_omissions
 
     output:
     path "${uk_fasta.baseName}.omit_filtered.fa", emit: fasta
@@ -125,8 +125,8 @@ process uk_filter_on_sample_date {
     */
 
     input:
-    file uk_fasta
-    file uk_metadata
+    path uk_fasta
+    path uk_metadata
 
     output:
     path "${uk_fasta.baseName}.date_filtered.fa", emit: fasta

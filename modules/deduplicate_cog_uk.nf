@@ -13,8 +13,8 @@ process uk_annotate_with_unmapped_genome_completeness {
     */
 
     input:
-    file uk_fasta
-    file uk_metadata
+    path uk_fasta
+    path uk_metadata
 
     output:
     path "${uk_metadata.baseName}.annotated.csv"
@@ -54,8 +54,8 @@ process uk_remove_duplicates_COGID_by_proportionN {
     */
 
     input:
-    file uk_fasta
-    file uk_metadata
+    path uk_fasta
+    path uk_metadata
 
     output:
     path "${uk_fasta.baseName}.deduplicated_by_cogid.fa", emit: uk_fasta_updated
@@ -120,8 +120,8 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
     */
 
     input:
-    file uk_fasta
-    file uk_metadata
+    path uk_fasta
+    path uk_metadata
 
     output:
     path "${uk_fasta.baseName}.deduplicated_by_biosamplesourceid.fa", emit: uk_fasta_updated
@@ -193,8 +193,8 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
     publishDir "${params.publish_dir}/alignments/", pattern: "*.fa", mode: 'copy', saveAs: {"cog_${params.date}_all.fasta"}
 
     input:
-    file uk_fasta
-    file uk_metadata
+    path uk_fasta
+    path uk_metadata
 
     output:
     path "${uk_fasta.baseName}.deduplicated_by_rootbiosample.fa", emit: uk_fasta_updated
