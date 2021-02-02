@@ -3,7 +3,6 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
-includeConfig 'config/base.config'
 
 
 process uk_annotate_with_unmapped_genome_completeness {
@@ -71,6 +70,8 @@ process uk_remove_duplicates_COGID_by_proportionN {
     alignment = SeqIO.index("${uk_fasta}", "fasta")
 
     dup_dict = {}
+    tokeep = set()
+
     with open("${uk_metadata}", 'r', newline = '') as csv_in:
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
 
@@ -87,7 +88,6 @@ process uk_remove_duplicates_COGID_by_proportionN {
             else:
                 dup_dict[id] = {"fasta_header": fasta_header, "completeness": completeness}
 
-    tokeep = set()
     for k,v in dup_dict.items():
         tokeep.add(v["fasta_header"])
 
@@ -136,6 +136,8 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
     alignment = SeqIO.index("${uk_fasta}", "fasta")
 
     dup_dict = {}
+    tokeep = set()
+
     with open("${uk_metadata}", 'r', newline = '') as csv_in:
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
 
@@ -156,7 +158,6 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
             else:
                 dup_dict[id] = {"fasta_header": fasta_header, "epi_day": epi_day}
 
-    tokeep = set()
     for k,v in dup_dict.items():
         tokeep.add(v["fasta_header"])
 
@@ -189,7 +190,7 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
     * @params date
     */
 
-    publishDir "${params.export_dir}/alignments/", pattern: "*.fa", mode: 'copy', saveAs: {"cog_${params.date}_all.fasta"}
+    publishDir "${params.publish_dir}/alignments/", pattern: "*.fa", mode: 'copy', saveAs: {"cog_${params.date}_all.fasta"}
 
     input:
     file uk_fasta
@@ -208,6 +209,8 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
     alignment = SeqIO.index("${uk_fasta}", "fasta")
 
     dup_dict = {}
+    tokeep = set()
+
     with open("${uk_metadata}", 'r', newline = '') as csv_in:
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
 
@@ -228,7 +231,6 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
             else:
                 dup_dict[id] = {"fasta_header": fasta_header, "completeness": completeness}
 
-    tokeep = set()
     for k,v in dup_dict.items():
         tokeep.add(v["fasta_header"])
 
@@ -270,5 +272,7 @@ workflow deduplicate_cog_uk {
 
 
 workflow {
-    deduplicate_cog_uk(params.uk_fasta, params.uk_metadata)
+    uk_fasta = file(params.uk_fasta)
+    uk_metadata = file(params.uk_metadata)
+    deduplicate_cog_uk(uk_fasta, uk_metadata)
 }

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 from Bio import SeqIO
+import argparse
+import re
 
 def parse_args():
     parser = argparse.ArgumentParser(description="""Apply a mask to some bases of alignment""",

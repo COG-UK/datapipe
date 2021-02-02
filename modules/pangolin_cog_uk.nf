@@ -3,7 +3,6 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
-includeConfig 'config/base.config'
 
 
 process extract_sequences_for_pangolin {
@@ -133,7 +132,8 @@ process uk_add_new_pangolin_lineages_to_metadata {
          open("${uk_metadata.baseName}.with_pangolin.csv", 'w', newline = '') as csv_out:
 
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
-        writer = csv.DictWriter(csv_out, fieldnames = reader.fieldnames, delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
+        column_names = reader.fieldnames + [col for col in ["lineage", "pangoLEARN_version", "probability"] if col not in reader.fieldnames]
+        writer = csv.DictWriter(csv_out, fieldnames = column_names, delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
         writer.writeheader()
 
         for row in reader:
@@ -160,6 +160,9 @@ workflow pangolin_cog_uk {
 
 
 workflow {
-    pangolin_cog_uk(params.uk_fasta,
-                    params.uk_metadata)
+    uk_fasta = file(params.uk_fasta)
+    uk_metadata = file(params.uk_metadata)
+
+    pangolin_cog_uk(uk_fasta,
+                    uk_metadata)
 }

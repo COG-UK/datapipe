@@ -1,0 +1,28 @@
+Descriptions of the included resources:
+
+- MN908947.fa
+- MN908947.gb
+  These are the reference genome fasta and genbank files, used to place genomes in reference coordinates for alignment/trimming steps
+  and for typing variants specified relative to the reference.
+
+- date_corrections.csv
+  central_sample_id,sample_date
+  These overwrite the dates in MAJORA
+
+- resequencing_omissions.txt
+  These IDs have been resequenced and should be omitted
+
+- mask.txt
+  start (1-based), mask character, regex-format string to match record.id
+  Masks with a ? regions of the alignment that may be unreliable, currently only one base
+
+- AAs.csv
+  AAmutation, nuc position in reference
+  Specific mutations to look for
+- dels.csv
+  nuc position in reference, length
+  Specific deletions to look for
+
+- geography
+  Lookup tables to translate human coded adm0 adm1 adm2 regions to meaningful reports
+

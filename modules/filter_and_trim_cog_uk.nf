@@ -3,7 +3,7 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
-includeConfig 'config/base.config'
+publish_dir = file(params.publish_dir)
 
 
 process uk_filter_low_coverage_sequences {
@@ -19,8 +19,8 @@ process uk_filter_low_coverage_sequences {
     file uk_metadata
 
     output:
-    file "${uk_alignment.baseName}.low_covg_filtered.fasta", emit: uk_fasta_updated
-    file "${uk_metadata.baseName}.low_covg_filtered.csv", emit: uk_metadata_updated
+    path "${uk_alignment.baseName}.low_covg_filtered.fasta", emit: uk_fasta_updated
+    path "${uk_metadata.baseName}.low_covg_filtered.csv", emit: uk_metadata_updated
 
     script:
     if (!params.min_covg)
@@ -59,29 +59,6 @@ process uk_filter_low_coverage_sequences {
 }
 
 
-process uk_mask_alignment {
-    /**
-    * Applies a mask to aligned FASTA
-    * @input uk_alignment
-    * @output uk_alignment_updated
-    * @params uk_mask_file
-    */
-
-    input:
-    file uk_alignment
-
-    output:
-    file "${uk_alignment.baseName}.masked.fa"
-
-    script:
-    """
-    $project_dir/../bin/add_mask.py \
-      --in-alignment ${uk_alignment} \
-      --out-alignment "${uk_alignment.baseName}.masked.fa" \
-      --mask ${params.uk_mask_file} \
-    """
-}
-
 process uk_trim_alignment {
     /**
     * Trims start and end of alignment
@@ -94,7 +71,7 @@ process uk_trim_alignment {
     file uk_alignment
 
     output:
-    file "${uk_alignment.baseName}.trimmed.fa"
+    path "${uk_alignment.baseName}.trimmed.fa"
 
     script:
     if (params.trim_start && params.trim_end)
@@ -120,20 +97,59 @@ process uk_trim_alignment {
         """
 }
 
+process publish_filtered_aligned_cog_data {
+    /**
+    * Publish filtered alignment and relevant metadata
+    * @input uk_alignment, uk_metadata
+    * @params date
+    */
+
+    publishDir "${publish_dir}/alignments/", pattern: "*.fa", mode: 'copy', saveAs: {"cog_${params.date}_alignment.fasta"}
+    publishDir "${publish_dir}/alignments/", pattern: "*.csv", mode: 'copy', saveAs: {"cog_${params.date}_metadata.fasta"}
+
+    input:
+    file uk_alignment
+    file uk_metadata
+
+    output:
+    path "${uk_alignment.baseName}.matched.fa"
+    path "${uk_metadata.baseName}.matched.csv"
+
+    script:
+    """
+    fastafunk fetch \
+          --in-fasta ${uk_alignment} \
+          --in-metadata ${uk_metadata} \
+          --index-column sequence_name \
+          --filter-column sequence_name secondary_identifier sample_date epi_week \
+                                    country adm1 adm2 outer_postcode \
+                                    is_surveillance is_community is_hcw \
+                                    is_travel_history travel_history lineage \
+                                    lineage_support \
+          --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private \
+          --out-fasta "${uk_alignment.baseName}.matched.fa" \
+          --out-metadata "${uk_metadata.baseName}.matched.csv" \
+          --restrict
+    """
+}
+
 workflow filter_and_trim_cog_uk {
     take:
         uk_fasta
         uk_metadata
     main:
         uk_filter_low_coverage_sequences(uk_fasta, uk_metadata)
-        uk_mask_alignment(uk_filter_low_coverage_sequences.out.uk_fasta_updated)
-        uk_trim_alignment(uk_mask_alignment.out)
+        uk_trim_alignment(uk_filter_low_coverage_sequences.out.uk_fasta_updated)
+        publish_filtered_aligned_cog_data(uk_trim_alignment.out,uk_filter_low_coverage_sequences.out.uk_metadata_updated)
     emit:
         fasta = uk_trim_alignment.out
         metadata = uk_filter_low_coverage_sequences.out.uk_metadata_updated
 }
 
 workflow {
-    filter_and_trim_cog_uk(params.uk_fasta,
-                           params.uk_metadata)
+    uk_fasta = file(params.uk_fasta)
+    uk_metadata = file(params.uk_metadata)
+
+    filter_and_trim_cog_uk(uk_fasta,
+                           uk_metadata)
 }

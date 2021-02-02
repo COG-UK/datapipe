@@ -2,10 +2,11 @@
 no longer needed?
 - omissions file: is it really necessary still?
 - what is best practice: add lots of inputs, or have global params used by processes and minimal inputs?
-- Lots of very similar looking python scripts within processes - these were fastafunks, but were replaced
-to speed up. Could instead speed up fastafunk in the same way.
+- in general, fix inputs/params so cast as a file/path at the right point allowing no file in some cases
 - what should desired result be if missing input files e.g. list of aas/dels to search for and add to metadata table.
 Set up now to skip that step
+- Lots of very similar looking python scripts within processes - these were fastafunks, but were replaced
+to speed up. Could instead speed up fastafunk in the same way.
 - Used to retain info week to week about which samples were eliminated as duplicates - this is now done denovo each
 week which is probably desirable behaviour?
 - Used to have min length and min covg thresholds, now have just one lower min_covg threshold because if not tree
@@ -14,3 +15,7 @@ building don't need higher covg?
     - remove mutations from consortium metadata, add them to variants metadata
     - remove phylogenetics columns, make phylogenetics metadata later
 - might want to publish developer info to a directory e.g. geography outputs inc new dodgy stuff
+- command line help and specify required arguments
+- containerize and get rid of conda environment - can be parsed down at the same time as includes things from other
+steps of the old pipeline
+- add back in resource requirements

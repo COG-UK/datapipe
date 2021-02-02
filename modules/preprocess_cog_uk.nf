@@ -3,7 +3,6 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
-includeConfig 'config/base.config'
 
 
 process uk_strip_header_digits {
@@ -88,7 +87,7 @@ process uk_filter_omitted_sequences {
         alignment = SeqIO.index("${uk_fasta}", "fasta")
 
         omissions = set()
-        with open("${params.uk_omissions}", "r") as f:
+        with open("${uk_omissions}", "r") as f:
             for line in f:
                 omissions.add(line.rstrip())
 
@@ -176,10 +175,14 @@ process uk_filter_on_sample_date {
         """
 }
 
+uk_updated_dates = file(params.uk_updated_dates)
+uk_omissions = file(params.uk_omissions)
+
 workflow preprocess_cog_uk {
     take:
         uk_fasta
         uk_metadata
+        uk_accessions
     main:
         uk_strip_header_digits(uk_fasta)
         uk_add_columns_to_metadata(uk_metadata, uk_accessions, uk_updated_dates)
@@ -192,6 +195,11 @@ workflow preprocess_cog_uk {
 
 
 workflow {
-    preprocess_cog_uk(params.uk_fasta,
-                      params.uk_metadata)
+    uk_fasta = file(params.uk_fasta)
+    uk_metadata = file(params.uk_metadata)
+    uk_accessions = file(params.uk_accessions)
+
+    preprocess_cog_uk(uk_fasta,
+                      uk_metadata,
+                      uk_accessions)
 }
