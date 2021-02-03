@@ -253,12 +253,11 @@ aas = file(params.aas)
 dels = file(params.dels)
 reference_fasta = file(params.reference_fasta)
 reference_genbank = file(params.reference_genbank)
-publish_dir = file(params.publish_dir)
 
 
 workflow {
-    uk_fasta = file(params.uk_fasta)
-    uk_metadata = file(params.uk_metadata)
+    uk_fasta = Channel.fromPath(params.uk_fasta)
+    uk_metadata = Channel.fromPath(params.uk_metadata)
 
     align_and_variant_call_cog_uk(uk_fasta,
                                   uk_metadata)
