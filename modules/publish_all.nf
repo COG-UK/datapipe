@@ -7,54 +7,6 @@ publish_dir = file(params.publish_dir)
 publish_dev = file(params.publish_dev)
 
 
-process uk_geography {
-    /**
-    * Cleans up geography
-    * @input uk_fasta, uk_metadata
-    * @output geography_metadata
-    * @params geography_utils
-    */
-
-    publishDir "${publish_dev}/", pattern: "geography/*.csv", mode: 'copy'
-    publishDir "${publish_dev}/", pattern: "geography/*.txt", mode: 'copy'
-
-    input:
-    path uk_fasta
-    path uk_metadata
-
-    output:
-    path "geography/geography.csv", emit: geography
-    path "geography/*.csv"
-    path "geography/*.txt"
-
-    script:
-    """
-    mkdir geography
-    mkdir geography_tmp
-
-    fastafunk fetch \
-      --in-fasta ${uk_fasta} \
-      --in-metadata ${uk_metadata} \
-      --index-column sequence_name \
-      --filter-column central_sample_id sequence_name sample_date epi_week \
-                      adm0 adm1 adm2 adm2_private \
-      --out-fasta geography_tmp/fetch.fa \
-      --out-metadata geography_tmp/fetch.csv \
-      --restrict
-
-    $project_dir/../bin/geography_cleaning.py \
-      --metadata geography_tmp/fetch.csv \
-      --country-col adm0 \
-      --adm1-col adm1 \
-      --adm2-col adm2 \
-      --outer-postcode-col adm2_private \
-      --mapping-utils-dir ${geography_utils} \
-      --outdir geography
-
-    rm -rf geography_tmp
-    """
-}
-
 process combine_cog_gisaid {
     /**
     * Combines FASTA and METADATA for COG-UK and GISAID
@@ -123,6 +75,7 @@ process combine_cog_gisaid {
     """
 }
 
+
 process combine_variants {
     /**
     * Combines FASTA and METADATA for COG-UK and GISAID
@@ -172,6 +125,83 @@ process combine_variants {
                 variants_out.write(line)
     """
 }
+
+
+process uk_geography {
+    /**
+    * Cleans up geography
+    * @input uk_fasta, uk_metadata
+    * @output geography_metadata
+    * @params geography_utils
+    */
+
+    publishDir "${publish_dev}/", pattern: "geography/*.csv", mode: 'copy'
+    publishDir "${publish_dev}/", pattern: "geography/*.txt", mode: 'copy'
+
+    input:
+    path uk_fasta
+    path uk_metadata
+
+    output:
+    path "geography/geography.csv", emit: geography
+    path "geography/*.csv"
+    path "geography/*.txt"
+
+    script:
+    """
+    mkdir geography
+    mkdir geography_tmp
+
+    fastafunk fetch \
+      --in-fasta ${uk_fasta} \
+      --in-metadata ${uk_metadata} \
+      --index-column sequence_name \
+      --filter-column central_sample_id sequence_name sample_date epi_week \
+                      adm0 adm1 adm2 adm2_private \
+      --out-fasta geography_tmp/fetch.fa \
+      --out-metadata geography_tmp/fetch.csv \
+      --restrict
+
+    $project_dir/../bin/geography_cleaning.py \
+      --metadata geography_tmp/fetch.csv \
+      --country-col adm0 \
+      --adm1-col adm1 \
+      --adm2-col adm2 \
+      --outer-postcode-col adm2_private \
+      --mapping-utils-dir ${geography_utils} \
+      --outdir geography
+
+    rm -rf geography_tmp
+    """
+}
+
+
+process add_geography_to_metadata {
+    /**
+    * Adds UK geography to combined metadata
+    * @input combined_metadata, geography_metadata
+    * @output metadata
+    */
+
+    input:
+    path combined_metadata
+    path geography_metadata
+
+    output:
+    path "cog_gisaid_geography.csv", emit: metadata
+
+    script:
+    """
+    fastafunk add_columns \
+          --in-metadata ${combined_metadata} \
+          --in-data ${geography_metadata} \
+          --index-column sequence_name \
+          --join-on sequence_name \
+          --new-columns adm1 adm2 outer_postcode adm2_raw adm2_source nuts1 region latitude longitude location \
+          --out-metadata "cog_gisaid_geography.csv"
+    """
+}
+
 
 process publish_recipes {
     /**
@@ -230,11 +260,13 @@ workflow publish_all {
         gisaid_metadata
         gisaid_variants
     main:
-        uk_geography(uk_fasta, uk_metadata)
+
         combine_cog_gisaid(uk_fasta, uk_metadata, gisaid_fasta, gisaid_metadata)
         combine_variants(uk_fasta, uk_variants, gisaid_fasta, gisaid_variants)
+        uk_geography(uk_fasta, uk_metadata)
+        add_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
         publish_recipes(uk_unaligned_fasta,uk_aligned_fasta,uk_fasta,combine_cog_gisaid.out.fasta, \
-                        uk_metadata,combine_cog_gisaid.out.metadata,uk_variants,combine_variants.out)
+                        uk_metadata,add_geography_to_metadata.out.metadata,uk_variants,combine_variants.out)
 
 }
 

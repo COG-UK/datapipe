@@ -4,7 +4,10 @@ import argparse
 import json
 import subprocess
 import os
+import sys
 import glob
+
+class Error (Exception): pass
 
 def parse_args():
     parser = argparse.ArgumentParser(description="""Create published files from config file""",
@@ -50,18 +53,18 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
         sys.exit("Config entries need to specify either fasta in ['unaligned', 'aligned', 'trimmed', 'cog_global'] or data \
         in ['cog', 'cog_global']")
 
+    if info_dict["data"] is None:
+            if info_dict["fasta"] == "cog_global":
+                info_dict["data"] = "cog_global"
+            else:
+                info_dict["data"] = "cog"
+
     if info_dict["data"] == "cog_global":
             info_dict["in_csv"] = csv_dict["cog_global"]
             info_dict["in_var"] = var_dict["cog_global"]
     elif info_dict["data"] == "cog":
             info_dict["in_csv"] = csv_dict["cog"]
             info_dict["in_var"] = var_dict["cog"]
-
-    if info_dict["data"] is None:
-        if info_dict["fasta"] == "cog_global":
-            info_dict["data"] = "cog_global"
-        else:
-            info_dict["data"] = "cog"
 
     if info_dict["variants"]:
         if info_dict["suffix"] is None:
@@ -88,29 +91,47 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
 
     return info_dict
 
+def syscall(cmd_list, allow_fail=False):
+    if None in cmd_list:
+        print('None in list', cmd_list, file=sys.stderr)
+        raise Error('Error in command. Cannot continue')
+    command = ' '.join(cmd_list)
+    completed_process = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+    if (not allow_fail) and completed_process.returncode != 0:
+        print('Error running this command:', command, file=sys.stderr)
+        print('Return code:', completed_process.returncode, file=sys.stderr)
+        print('\nOutput from stdout:', completed_process.stdout, sep='\n', file=sys.stderr)
+        print('\nOutput from stderr:', completed_process.stderr, sep='\n', file=sys.stderr)
+        raise Error('Error in system call. Cannot continue')
+    print(completed_process.stdout)
+    return completed_process
 
 def publish_file(outdir, info_dict):
     if info_dict["metadata_fields"] is None:
         cmd_list = ["cp", info_dict["in_fa"], info_dict["out_fa"]]
-        subprocess.run(' '.join(cmd_list), shell=True)
+        syscall(cmd_list)
         return
 
     cmd_list = ["fastafunk fetch --in-fasta", info_dict["in_fa"], "--in-metadata", info_dict["in_csv"],
               "--index-column sequence_name --out-fasta", info_dict["out_fa"],
               "--out-metadata", info_dict["out_csv"], "--restrict"]
+    if info_dict["metadata_fields"]:
+            cmd_list.append("--filter-column")
+            cmd_list.extend(info_dict["metadata_fields"])
     if info_dict["where"]:
         cmd_list.append("--where-column %s" %info_dict["where"])
-    subprocess.run(' '.join(cmd_list), shell=True)
+    syscall(cmd_list)
 
     if info_dict["variants"]:
         cmd_list = ["fastafunk add_columns --in-metadata", info_dict["out_csv"],
         "--in-data", info_dict["in_var"], "--index-column sequence_name",
         "--join-on query --out-metadata", info_dict["out_var"]]
-        subprocess.run(' '.join(cmd_list), shell=True)
+        syscall(cmd_list)
 
     tmp = glob.glob("tmp.*")
     if len(tmp) > 0:
-        subprocess.run("rm tmp.*", shell=True)
+        cmd_list = ["rm tmp.*"]
+        syscall(cmd_list)
 
 def main():
     args = parse_args()
