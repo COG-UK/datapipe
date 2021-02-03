@@ -26,3 +26,12 @@ Descriptions of the included resources:
 - geography
   Lookup tables to translate human coded adm0 adm1 adm2 regions to meaningful reports
 
+- publish_recipes.json
+  A file of recipes to make the billions of output files.
+  Parsed by bin/publish_from_config.py
+  Each key in the dict represents an outdir
+  For that outdir, a list of outfiles is given, each represented by a dict
+  Outfile dicts can include fields: suffix, data, fasta, metadata_fields, where, and mutations
+  Either data in ["cog", "cog_global"] or fasta in ["unaligned", "aligned", "trimmed", "cog_global"] must be specified
+  Mutations is a bool, metadata_fields a list and all others are strings
+
