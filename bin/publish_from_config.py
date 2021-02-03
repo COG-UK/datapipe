@@ -4,6 +4,7 @@ import argparse
 import json
 import subprocess
 import os
+import glob
 
 def parse_args():
     parser = argparse.ArgumentParser(description="""Create published files from config file""",
@@ -20,6 +21,7 @@ def parse_args():
     parser.add_argument('--cog_global_variants', dest = 'cog_global_variants', required=True, help='Mutations CSV')
 
     parser.add_argument('--recipes', dest = 'recipes', required=True, help='JSON of recipes')
+    parser.add_argument('--date', dest = 'date', required=True, help='Datestamp for published files')
 
     args = parser.parse_args()
     return args
@@ -31,8 +33,9 @@ def parse_args():
 #"where": free text to be passed to fastafunk fetch --where-column
 #"suffix": something to append to file names
 
-def get_info_from_config(config_dict, outdir, fasta_dict, csv_dict, var_dict):
-    info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None, "where": None, "variants":False,
+def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_dict):
+    info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None,
+                 "where": None, "variants":False, "date": date,
                  "in_fa":None, "in_csv":None, "in_var":None,
                  "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":None}
     info_dict.update(config_dict)
@@ -55,7 +58,7 @@ def get_info_from_config(config_dict, outdir, fasta_dict, csv_dict, var_dict):
             info_dict["in_var"] = var_dict["cog"]
 
     if info_dict["data"] is None:
-        if fasta == "cog_global":
+        if info_dict["fasta"] == "cog_global":
             info_dict["data"] = "cog_global"
         else:
             info_dict["data"] = "cog"
@@ -74,21 +77,19 @@ def get_info_from_config(config_dict, outdir, fasta_dict, csv_dict, var_dict):
     if info_dict["fasta"]:
         if info_dict["metadata_fields"]:
             if info_dict["suffix"] is None:
-                info_dict["out_fa"] = "%s/%s_%s_alignment.csv" %(outdir, info_dict["data"], info_dict["date"])
+                info_dict["out_fa"] = "%s/%s_%s_alignment.fa" %(outdir, info_dict["data"], info_dict["date"])
             else:
-                info_dict["out_fa"] = "%s/%s_%s_%s_alignment.csv" %(outdir, info_dict["data"], info_dict["date"], info_dict["suffix"])
+                info_dict["out_fa"] = "%s/%s_%s_%s_alignment.fa" %(outdir, info_dict["data"], info_dict["date"], info_dict["suffix"])
         else:
             if info_dict["suffix"] is None:
-                info_dict["out_fa"] = "%s/%s_%s.csv" %(outdir, info_dict["data"], info_dict["date"])
+                info_dict["out_fa"] = "%s/%s_%s.fa" %(outdir, info_dict["data"], info_dict["date"])
             else:
-                info_dict["out_fa"] = "%s/%s_%s_%s.csv" %(outdir, info_dict["data"], info_dict["date"], info_dict["suffix"])
+                info_dict["out_fa"] = "%s/%s_%s_%s.fa" %(outdir, info_dict["data"], info_dict["date"], info_dict["suffix"])
 
     return info_dict
 
 
 def publish_file(outdir, info_dict):
-    os.makedirs(outdir)
-
     if info_dict["metadata_fields"] is None:
         cmd_list = ["cp", info_dict["in_fa"], info_dict["out_fa"]]
         subprocess.run(' '.join(cmd_list), shell=True)
@@ -107,7 +108,9 @@ def publish_file(outdir, info_dict):
         "--join-on query --out-metadata", info_dict["out_var"]]
         subprocess.run(' '.join(cmd_list), shell=True)
 
-    subprocess.run("rm tmp.*", shell=True)
+    tmp = glob.glob("tmp.*")
+    if len(tmp) > 0:
+        subprocess.run("rm tmp.*", shell=True)
 
 def main():
     args = parse_args()
@@ -121,8 +124,9 @@ def main():
         recipes = json.load(f)
 
     for outdir in recipes.keys():
+        os.makedirs(outdir,exist_ok=True)
         for recipe in recipes[outdir]:
-            info_dict = get_info_from_config(recipe, outdir, fasta_dict, csv_dict, var_dict)
+            info_dict = get_info_from_config(recipe, outdir, args.date, fasta_dict, csv_dict, var_dict)
             publish_file(outdir, info_dict)
 
 if __name__ == '__main__':

@@ -190,8 +190,6 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
     * @params date
     */
 
-    publishDir "${params.publish_dir}/alignments/", pattern: "*.fa", mode: 'copy', saveAs: {"cog_${params.date}_all.fasta"}
-
     input:
     path uk_fasta
     path uk_metadata

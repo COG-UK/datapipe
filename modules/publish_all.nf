@@ -210,7 +210,8 @@ process publish_recipes {
       --cog_global_metadata ${combined_metadata} \
       --cog_variants ${uk_variants} \
       --cog_global_variants ${combined_variants} \
-      --recipes ${recipes}
+      --recipes ${recipes} \
+      --date ${params.date}
     """
 }
 
@@ -218,7 +219,7 @@ process publish_recipes {
 geography_utils = file(params.uk_geography)
 recipes = file(params.publish_recipes)
 
-workflow publish_cog_uk {
+workflow publish_all {
     take:
         uk_unaligned_fasta
         uk_aligned_fasta
@@ -247,7 +248,7 @@ workflow {
     gisaid_metadata = file(params.gisaid_metadata)
     gisaid_variants = file(params.gisaid_variants)
 
-    publish_cog_uk(uk_fasta,
+    publish_all(uk_fasta,
                    uk_fasta,
                    uk_fasta,
                    uk_metadata,
