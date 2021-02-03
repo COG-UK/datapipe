@@ -7,19 +7,13 @@ channels:
 dependencies:
   - biopython=1.74
   - coreutils=8.25
-  - iqtree=1.6
-  - mafft
   - minimap2=2.17
   - pip=19.3.1
   - python=3.7.4
   - snakemake-minimal
-  - pandoc=1.19.2.1
-  - fasttree
-  - gotree
   - nextflow
   - r-base=3.5.1
   - r-networkd3
-  - jclusterfunk
   - benjamincjackson::gofasta=v0.0.3
   - pip:
       - git+https://github.com/COG-UK/phylo-reports.git
@@ -27,8 +21,6 @@ dependencies:
       - git+https://github.com/cov-lineages/pangoLEARN.git
       - git+https://github.com/cov-ert/datafunk.git
       - git+https://github.com/cov-ert/fastafunk.git
-      - git+https://github.com/cov-ert/clusterfunk.git
-      - git+https://github.com/neherlab/treetime
       - matplotlib==3.2.1
       - numpy==1.18.1
       - pweave==0.30.3
@@ -43,4 +35,4 @@ dependencies:
       - descartes==1.1.0
       - joypy==0.2.2
       - pytools==2020.1
-      - dendropy>=4.4.0
+
