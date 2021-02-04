@@ -254,6 +254,33 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
 }
 
 
+process unify_headers {
+    input:
+    path uk_fasta
+    path uk_metadata
+
+    output:
+    path "${uk_fasta.baseName}.UH.fa"
+
+    script:
+    """
+    #!/usr/bin/env python3
+    from Bio import SeqIO
+    import csv
+
+    alignment = SeqIO.index("${uk_fasta}", "fasta")
+
+    with open("${uk_metadata}", 'r', newline = '') as csv_in, \
+        open("${uk_fasta.baseName}.UH.fa", "w") as fasta_out:
+        reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
+        for row in reader:
+            record = alignment[row["fasta_header"]]
+            fasta_out.write(">" + row["sample_name"] + "\\n")
+            fasta_out.write(str(record.seq) + "\\n")
+    """
+}
+
+
 workflow deduplicate_cog_uk {
     take:
         uk_fasta
@@ -263,8 +290,9 @@ workflow deduplicate_cog_uk {
         uk_remove_duplicates_COGID_by_proportionN(uk_fasta, uk_annotate_with_unmapped_genome_completeness.out)
         uk_remove_duplicates_biosamplesourceid_by_date(uk_remove_duplicates_COGID_by_proportionN.out.uk_fasta_updated, uk_remove_duplicates_COGID_by_proportionN.out.uk_metadata_updated)
         uk_remove_duplicates_rootbiosample_by_gaps(uk_remove_duplicates_biosamplesourceid_by_date.out.uk_fasta_updated, uk_remove_duplicates_biosamplesourceid_by_date.out.uk_metadata_updated)
+        uk_unify_headers(uk_remove_duplicates_rootbiosample_by_gaps.out.uk_fasta_updated, uk_remove_duplicates_rootbiosample_by_gaps.out.uk_metadata_updated)
     emit:
-        fasta = uk_remove_duplicates_rootbiosample_by_gaps.out.uk_fasta_updated
+        fasta = uk_unify_headers.out
         metadata = uk_remove_duplicates_rootbiosample_by_gaps.out.uk_metadata_updated
 }
 
