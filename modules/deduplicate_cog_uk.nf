@@ -254,7 +254,7 @@ process uk_remove_duplicates_rootbiosample_by_gaps {
 }
 
 
-process unify_headers {
+process uk_unify_headers {
     input:
     path uk_fasta
     path uk_metadata
@@ -275,7 +275,7 @@ process unify_headers {
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
         for row in reader:
             record = alignment[row["fasta_header"]]
-            fasta_out.write(">" + row["sample_name"] + "\\n")
+            fasta_out.write(">" + row["sequence_name"] + "\\n")
             fasta_out.write(str(record.seq) + "\\n")
     """
 }

@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('--reference-fasta', dest = 'reference_fasta', required=True, help='Reference FASTA')
     parser.add_argument('--aas', dest = 'aas', required=False, help='CSV of AAs')
     parser.add_argument('--dels', dest = 'dels', required=False, help='CSV of deletions')
+    paraser.add_argument('--index-column', dest = 'index_column', required=False, default='sequence_name')
 
     args = parser.parse_args()
     return args
@@ -65,7 +66,7 @@ def parse_del_file(file, ref_fasta):
 
     return(ls)
 
-def type_aas_and_dels(in_fasta, in_aa_file, in_del_file, reference_fasta, in_metadata, out_metadata):
+def type_aas_and_dels(in_fasta, in_aa_file, in_del_file, reference_fasta, in_metadata, out_metadata, index_column):
     alignment = SeqIO.index(in_fasta, "fasta")
     AAs = parse_AA_file(in_aa_file)
     dels = parse_del_file(in_del_file, reference_fasta)
@@ -81,7 +82,7 @@ def type_aas_and_dels(in_fasta, in_aa_file, in_del_file, reference_fasta, in_met
         writer.writeheader()
 
         for row in reader:
-            id = row["fasta_header"]
+            id = row[index_column]
             seq = alignment[id].seq
 
             for entry in AAs:
@@ -111,7 +112,7 @@ def type_aas_and_dels(in_fasta, in_aa_file, in_del_file, reference_fasta, in_met
 
 def main():
     args = parse_args()
-    type_aas_and_dels(args.in_fasta, args.aas, args.dels, args.reference_fasta, args.in_metadata, args.out_metadata)
+    type_aas_and_dels(args.in_fasta, args.aas, args.dels, args.reference_fasta, args.in_metadata, args.out_metadata, args.index_column)
 
 if __name__ == '__main__':
     main()

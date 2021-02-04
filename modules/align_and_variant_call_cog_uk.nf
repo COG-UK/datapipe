@@ -180,7 +180,6 @@ process uk_type_AAs_and_dels {
 workflow align_and_variant_call_cog_uk {
     take:
         uk_fasta
-        uk_metadata
     main:
         uk_minimap2_to_reference(uk_fasta)
         uk_get_variants(uk_minimap2_to_reference.out)
@@ -188,11 +187,10 @@ workflow align_and_variant_call_cog_uk {
         uk_alignment(uk_minimap2_to_reference.out)
         uk_mask_alignment(uk_alignment.out)
         uk_get_snps(uk_mask_alignment.out)
-        uk_type_AAs_and_dels(uk_mask_alignment.out, uk_metadata)
+        uk_type_AAs_and_dels(uk_mask_alignment.out, uk_get_variants.out)
     emit:
-        variants = uk_get_variants.out
+        variants = uk_type_AAs_and_dels.out
         fasta = uk_mask_alignment.out
-        metadata = uk_type_AAs_and_dels.out
 }
 
 
@@ -205,8 +203,6 @@ reference_genbank = file(params.reference_genbank)
 
 workflow {
     uk_fasta = Channel.fromPath(params.uk_fasta)
-    uk_metadata = Channel.fromPath(params.uk_metadata)
 
-    align_and_variant_call_cog_uk(uk_fasta,
-                                  uk_metadata)
+    align_and_variant_call_cog_uk(uk_fasta)
 }
