@@ -173,7 +173,8 @@ process uk_type_AAs_and_dels {
       --out-metadata ${uk_metadata.baseName}.typed.csv \
       --reference-fasta ${reference_fasta} \
       --aas ${aas} \
-      --dels ${dels}
+      --dels ${dels} \
+      --index-column query
     """
 }
 

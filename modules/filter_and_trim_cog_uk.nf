@@ -44,7 +44,7 @@ process uk_filter_low_coverage_sequences {
             writer.writeheader()
 
             for row in reader:
-                id = row["fasta_header"]
+                id = row["sequence_name"]
                 if id in alignment:
                     seq = str(alignment[id].seq)
                     mapped_completeness = float(len(seq.replace("N", "")) / len(seq))

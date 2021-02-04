@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument('--reference-fasta', dest = 'reference_fasta', required=True, help='Reference FASTA')
     parser.add_argument('--aas', dest = 'aas', required=False, help='CSV of AAs')
     parser.add_argument('--dels', dest = 'dels', required=False, help='CSV of deletions')
-    paraser.add_argument('--index-column', dest = 'index_column', required=False, default='sequence_name')
+    parser.add_argument('--index-column', dest = 'index_column', required=False, default='sequence_name')
 
     args = parser.parse_args()
     return args

@@ -29,7 +29,7 @@ process combine_cog_gisaid {
         fastafunk fetch \
           --in-fasta ${uk_fasta} \
           --in-metadata ${uk_metadata} \
-          --index-column fasta_header \
+          --index-column sequence_name \
           --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
                           pillar_2 \
                           sequence_name sample_date epi_week \
