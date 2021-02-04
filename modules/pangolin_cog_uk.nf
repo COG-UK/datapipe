@@ -20,13 +20,13 @@ process extract_sequences_for_pangolin {
     path uk_metadata
 
     output:
-    path "${uk_fasta.baseName}.for_pangolin.fasta", emit: pangolin_fasta
+    path "${uk_fasta.baseName}.for_pangolin.fa", emit: pangolin_fasta
     path "${uk_metadata.baseName}.with_previous.csv", emit: metadata_with_previous
 
     script:
     if (params.update_all_lineage_assignments || !params.uk_previous_metadata )
         """
-        mv "${uk_fasta}" "${uk_fasta.baseName}.for_pangolin.fasta"
+        mv "${uk_fasta}" "${uk_fasta.baseName}.for_pangolin.fa"
         mv "${uk_metadata}" "${uk_metadata.baseName}.with_previous.csv"
         """
     else
@@ -41,10 +41,12 @@ process extract_sequences_for_pangolin {
         with open("${params.uk_previous_metadata}", 'r', newline = '') as lineages_in:
             reader = csv.DictReader(lineages_in, delimiter=",", quotechar='\"', dialect = "unix")
             for row in reader:
-                if row["taxon"] in lineage_dict:
+                #if row["taxon"] in lineage_dict:
+                if row["fasta_header"] in lineage_dict:
                     print("%s occurs more than once in lineages input file" % row["taxon"])
                     continue
-                lineage_dict[row["taxon"]] = {"lineage": row["lineage"], "pangoLEARN_version": row["pangoLEARN_version"], "probability": row["probability"]}
+                #lineage_dict[row["taxon"]] = {"lineage": row["lineage"], "pangoLEARN_version": row["pangoLEARN_version"], "probability": row["probability"]}
+                lineage_dict[row["fasta_header"]] = {"lineage": row["lineage"], "pangoLEARN_version": row["lineages_version"], "probability": row["lineage_support"]}
 
         with open("${uk_metadata}", 'r', newline = '') as csv_in, \
             open("${uk_metadata.baseName}.with_previous.csv", 'w', newline = '') as csv_out, \

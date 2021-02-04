@@ -29,8 +29,8 @@ process combine_cog_gisaid {
         fastafunk fetch \
           --in-fasta ${uk_fasta} \
           --in-metadata ${uk_metadata} \
-          --index-column sequence_name \
-          --filter-column covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
+          --index-column fasta_header \
+          --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
                           pillar_2 \
                           sequence_name sample_date epi_week \
                           country adm1 adm2 outer_postcode adm2_raw adm2_source nuts1 region latitude longitude location \
@@ -41,7 +41,7 @@ process combine_cog_gisaid {
                           d614g n439k p323l a222v y453f n501y t1001i p681h q27stop del_21765_6 del_1605_3 \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
-          --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private \
+          --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangLEARN_version \
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
           --restrict
