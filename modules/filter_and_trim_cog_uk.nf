@@ -3,6 +3,7 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
+publish_dev = file(params.publish_dev)
 
 
 process uk_filter_low_coverage_sequences {
@@ -12,6 +13,8 @@ process uk_filter_low_coverage_sequences {
     * @output uk_alignment_updated, uk_metadata_updated
     * @params min_covg
     */
+
+    publishDir "${publish_dev}/COG", pattern: "*.csv", mode: 'copy', saveAs: {"cog_master.csv"}
 
     input:
     path uk_alignment

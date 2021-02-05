@@ -4,6 +4,7 @@ nextflow.enable.dsl = 2
 
 project_dir = projectDir
 publish_dir = file(params.publish_dir)
+publish_dev = file(params.publish_dev)
 
 
 process uk_minimap2_to_reference {
@@ -157,6 +158,8 @@ process uk_type_AAs_and_dels {
     * @output uk_metadata_updated
     * @params reference_fasta, del_file, aa_file
     */
+
+    publishDir "${publish_dev}/COG", pattern: "*.csv", mode: 'copy', saveAs: {"cog_variants.csv"}
 
     input:
     path uk_alignment
