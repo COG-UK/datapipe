@@ -144,7 +144,7 @@ process uk_add_new_pangolin_lineages_to_metadata {
                 row["lineage"] = lineage_dict[fasta_header]["lineage"]
                 row["pangoLEARN_version"] = lineage_dict[fasta_header]["pangoLEARN_version"]
                 row["probability"] = lineage_dict[fasta_header]["probability"]
-                writer.writerow(row)
+            writer.writerow(row)
     """
 }
 
