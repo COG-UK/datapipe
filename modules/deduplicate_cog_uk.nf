@@ -197,7 +197,7 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
             if len(v) > 1:
                 for dup in v[1:]:
                     log.write("For id %s, %s epi_day:%s completeness:%s kept, %s epi_day:%s completeness:%s removed as \
-                               duplicate" %(k, v[0]["fasta_header"], v[0]["epi_day"], v[0]["completeness"], dup["fasta_header"], \
+                               duplicate\\n" %(k, v[0]["fasta_header"], v[0]["epi_day"], v[0]["completeness"], dup["fasta_header"], \
                                dup["epi_day"], dup["completeness"]))
 
 
@@ -278,7 +278,7 @@ process uk_remove_duplicates_rootbiosample_by_date {
                 if len(v) > 1:
                     for dup in v[1:]:
                         log.write("For id %s, %s epi_day:%s completeness:%s kept, %s epi_day:%s completeness:%s removed as \
-                                    duplicate" %(k, v[0]["fasta_header"], v[0]["epi_day"], v[0]["completeness"], dup["fasta_header"], \
+                                    duplicate\\n" %(k, v[0]["fasta_header"], v[0]["epi_day"], v[0]["completeness"], dup["fasta_header"], \
                                     dup["epi_day"], dup["completeness"]))
 
     with open("${uk_metadata}", 'r', newline = '') as csv_in, \
