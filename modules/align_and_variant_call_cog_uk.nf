@@ -14,7 +14,7 @@ process uk_minimap2_to_reference {
     * @params reference_fasta
     */
 
-    cpus 1
+    cpus 8
 
     input:
     path uk_fasta
@@ -36,7 +36,7 @@ process uk_get_variants {
     * @parms reference_fasta, reference_genbank
     */
 
-    cpus 1
+    cpus 8
 
     input:
     path uk_sam
@@ -88,7 +88,7 @@ process uk_alignment {
     * @params reference_fasta
     */
 
-    cpus 1
+    cpus 8
 
     input:
     path uk_sam

@@ -101,6 +101,8 @@ process uk_filter_omitted_sequences {
 
             for row in reader:
                 if row["central_sample_id"] in omissions:
+                    row["why_excluded"] = "central_sample_id in omissions_file"
+                    writer.writerow(row)
                     continue
 
                 record = alignment[row["fasta_header"]]
@@ -157,9 +159,12 @@ process uk_filter_on_sample_date {
                 try:
                     date = datetime.datetime.strptime(row["sample_date"], '%Y-%m-%d').date()
                 except:
-                    continue
+                    row["why_excluded"] = "no sample_date"
+                    writer.writerow(row)
 
                 if (todays_date - window) > date:
+                    row["why_excluded"] = "sample_date older than %s days" %window
+                    writer.writerow(row)
                     continue
 
                 writer.writerow(row)
