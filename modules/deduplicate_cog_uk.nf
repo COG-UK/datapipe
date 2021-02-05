@@ -184,7 +184,7 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
                 continue
 
             if id in dup_dict:
-                if epi_day < dup_dict[id]["epi_day"]:
+                if epi_day < dup_dict[id][0]["epi_day"]:
                     dup_dict[id].insert(0, {"fasta_header": fasta_header, "epi_day": epi_day, "completeness":completeness})
                 else:
                     dup_dict[id].append({"fasta_header": fasta_header, "epi_day": epi_day, "completeness":completeness})
@@ -265,7 +265,7 @@ process uk_remove_duplicates_rootbiosample_by_date {
                 continue
 
             if id in dup_dict:
-                if epi_day < dup_dict[id]["epi_day"]:
+                if epi_day < dup_dict[id][0]["epi_day"]:
                     dup_dict[id].insert(0, {"fasta_header": fasta_header, "epi_day": epi_day, "completeness":completeness})
                 else:
                     dup_dict[id].append({"fasta_header": fasta_header, "epi_day": epi_day, "completeness":completeness})
