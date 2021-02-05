@@ -32,13 +32,13 @@ def parse_args():
 #"data": "cog" or "cog_global"
 #"fasta": "unaligned", "aligned", "trimmed", "cog_global"
 #"metadata_fields": []
-#"variants": True or False to add columns from variants
+#"mutations": True or False to add columns from mutations
 #"where": free text to be passed to fastafunk fetch --where-column
 #"suffix": something to append to file names
 
 def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_dict):
     info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None,
-                 "where": None, "variants":False, "date": date,
+                 "where": None, "mutations":False, "date": date,
                  "in_fa":None, "in_csv":None, "in_var":None,
                  "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":None}
     info_dict.update(config_dict)
@@ -78,7 +78,7 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
         else:
             info_dict["out_fa"] = "%s.fa" %start
 
-    if info_dict["variants"]:
+    if info_dict["mutations"]:
         info_dict["out_var"] = "%s%s" %(start, csv_end)
     else:
         info_dict["out_csv"] = "%s%s" %(start, csv_end)
