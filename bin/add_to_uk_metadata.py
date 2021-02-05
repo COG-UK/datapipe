@@ -151,7 +151,7 @@ def main():
 
     date_dict = load_updated_dates(args.updated_date_file)
     accession_dict = load_accession(args.accession_file, log_handle)
-    new_columns = ["sample_date", "pillar_2", "sequence_name", "covv_accession_id", "edin_epi_week", "edin_epi_day"]
+    new_columns = ["sample_date", "pillar_2", "sequence_name", "covv_accession_id", "edin_epi_week", "edin_epi_day", "why_excluded"]
 
     with open(args.in_metadata, 'r', newline = '') as csv_in, \
          open(args.out_metadata, 'w', newline = '') as csv_out:
@@ -168,6 +168,7 @@ def main():
                 add_covv_accession_id(row, accession_dict)
                 add_epi_week_and_day(row)
                 United_Kingdom_to_UK(row)
+                row["why_excluded"] = ""
                 writer.writerow(row)
             except:
                 log_handle.write(f"Error updating metadata for row")

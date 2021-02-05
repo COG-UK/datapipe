@@ -77,6 +77,8 @@ process uk_remove_duplicates_COGID_by_proportionN {
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
 
         for row in reader:
+            if row["why_excluded"]:
+                continue
             fasta_header = row["fasta_header"]
             id = row["central_sample_id"]
             completeness = float(row["unmapped_genome_completeness"])
@@ -109,7 +111,9 @@ process uk_remove_duplicates_COGID_by_proportionN {
                 fasta_out.write(">" + seqrec.id + "\\n")
                 fasta_out.write(str(seqrec.seq) + "\\n")
             else:
-                continue
+                if not row["why_excluded"]:
+                    row["why_excluded"] = "duplicate central_sample_id"
+                writer.writerow(row)
     """
 }
 
@@ -174,6 +178,8 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
 
         for row in reader:
+            if row["why_excluded"]:
+                continue
             fasta_header = row["sequence_name"]
             id = row["biosample_source_id"]
             epi_day = int(row["edin_epi_day"])
@@ -217,7 +223,9 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
                 fasta_out.write(">" + seqrec.id + "\\n")
                 fasta_out.write(str(seqrec.seq) + "\\n")
             else:
-                continue
+                if not row["why_excluded"]:
+                    row["why_excluded"] = "duplicate biosample_source_id"
+                writer.writerow(row)
     """
 }
 
@@ -255,6 +263,8 @@ process uk_remove_duplicates_rootbiosample_by_date {
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
 
         for row in reader:
+            if row["why_excluded"]:
+                continue
             fasta_header = row["sequence_name"]
             id = row["root_biosample_source_id"]
             epi_day = int(row["edin_epi_day"])
@@ -297,7 +307,9 @@ process uk_remove_duplicates_rootbiosample_by_date {
                 fasta_out.write(">" + seqrec.id + "\\n")
                 fasta_out.write(str(seqrec.seq) + "\\n")
             else:
-                continue
+                if not row["why_excluded"]:
+                    row["why_excluded"] = "duplicate root_biosample_source_id"
+                writer.writerow(row)
     """
 }
 

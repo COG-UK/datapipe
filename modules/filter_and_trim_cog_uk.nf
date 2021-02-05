@@ -53,7 +53,9 @@ process uk_filter_low_coverage_sequences {
                         fasta_out.write(">" + id + "\\n")
                         fasta_out.write(seq + "\\n")
                     else:
-                        continue
+                        if not row["why_excluded"]:
+                            row["why_excluded"] = "low mapped_completeness"
+                        writer.writerow(row)
         """
 }
 
