@@ -116,7 +116,7 @@ def publish_file(outdir, info_dict):
         cmd_list.append("--where-column %s" %info_dict["where"])
     syscall(cmd_list)
 
-    if info_dict["variants"]:
+    if info_dict["mutations"]:
         cmd_list = ["fastafunk add_columns --in-metadata", info_dict["out_csv"],
         "--in-data", info_dict["in_var"], "--index-column sequence_name",
         "--join-on query --out-metadata", info_dict["out_var"]]
