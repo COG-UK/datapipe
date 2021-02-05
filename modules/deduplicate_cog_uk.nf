@@ -138,9 +138,12 @@ process uk_unify_headers {
         open("${uk_fasta.baseName}.UH.fa", "w") as fasta_out:
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
         for row in reader:
-            record = alignment[row["fasta_header"]]
-            fasta_out.write(">" + row["sequence_name"] + "\\n")
-            fasta_out.write(str(record.seq) + "\\n")
+            if row["why_excluded"]:
+                continue
+            if row["fasta_header"] in alignment:
+                record = alignment[row["fasta_header"]]
+                fasta_out.write(">" + row["sequence_name"] + "\\n")
+                fasta_out.write(str(record.seq) + "\\n")
     """
 }
 
@@ -216,6 +219,9 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
         writer.writeheader()
 
         for row in reader:
+            if row["why_excluded"]:
+                writer.writerow(row)
+                continue
             fasta_header = row["sequence_name"]
             if fasta_header in tokeep:
                 writer.writerow(row)
@@ -223,8 +229,7 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
                 fasta_out.write(">" + seqrec.id + "\\n")
                 fasta_out.write(str(seqrec.seq) + "\\n")
             else:
-                if not row["why_excluded"]:
-                    row["why_excluded"] = "duplicate biosample_source_id"
+                row["why_excluded"] = "duplicate biosample_source_id"
                 writer.writerow(row)
     """
 }
@@ -300,6 +305,9 @@ process uk_remove_duplicates_rootbiosample_by_date {
         writer.writeheader()
 
         for row in reader:
+            if row["why_excluded"]:
+                writer.writerow(row)
+                continue
             fasta_header = row["sequence_name"]
             if fasta_header in tokeep:
                 writer.writerow(row)
@@ -307,8 +315,7 @@ process uk_remove_duplicates_rootbiosample_by_date {
                 fasta_out.write(">" + seqrec.id + "\\n")
                 fasta_out.write(str(seqrec.seq) + "\\n")
             else:
-                if not row["why_excluded"]:
-                    row["why_excluded"] = "duplicate root_biosample_source_id"
+                row["why_excluded"] = "duplicate root_biosample_source_id"
                 writer.writerow(row)
     """
 }
