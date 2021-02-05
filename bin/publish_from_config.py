@@ -66,28 +66,22 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
             info_dict["in_csv"] = csv_dict["cog"]
             info_dict["in_var"] = var_dict["cog"]
 
-    if info_dict["variants"]:
-        if info_dict["suffix"] is None:
-            info_dict["out_var"] = "%s/%s_%s_metadata.csv" %(outdir, info_dict["data"], info_dict["date"])
-        else:
-            info_dict["out_var"] = "%s/%s_%s_%s_metadata.csv" %(outdir, info_dict["data"], info_dict["date"], info_dict["suffix"])
-    elif info_dict["metadata_fields"]:
-        if info_dict["suffix"] is None:
-            info_dict["out_csv"] = "%s/%s_%s_metadata.csv" %(outdir, info_dict["data"], info_dict["date"])
-        else:
-            info_dict["out_csv"] = "%s/%s_%s_%s_metadata.csv" %(outdir, info_dict["data"], info_dict["date"], info_dict["suffix"])
+    start = "%s/%s_%s" %(outdir, info_dict["data"], info_dict["date"])
+    if info_dict["suffix"]:
+        start += "_%s" %info_dict["suffix"]
+    csv_end = ".csv"
 
     if info_dict["fasta"]:
+        csv_end = "_metadata.csv"
         if info_dict["metadata_fields"]:
-            if info_dict["suffix"] is None:
-                info_dict["out_fa"] = "%s/%s_%s_alignment.fa" %(outdir, info_dict["data"], info_dict["date"])
-            else:
-                info_dict["out_fa"] = "%s/%s_%s_%s_alignment.fa" %(outdir, info_dict["data"], info_dict["date"], info_dict["suffix"])
+            info_dict["out_fa"] = "%s_alignment.fa" %start
         else:
-            if info_dict["suffix"] is None:
-                info_dict["out_fa"] = "%s/%s_%s.fa" %(outdir, info_dict["data"], info_dict["date"])
-            else:
-                info_dict["out_fa"] = "%s/%s_%s_%s.fa" %(outdir, info_dict["data"], info_dict["date"], info_dict["suffix"])
+            info_dict["out_fa"] = "%s.fa" %start
+
+    if info_dict["variants"]:
+        info_dict["out_var"] = "%s%s" %(start, csv_end)
+    else:
+        info_dict["out_csv"] = "%s%s" %(start, csv_end)
 
     return info_dict
 
