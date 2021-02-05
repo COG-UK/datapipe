@@ -314,7 +314,7 @@ workflow deduplicate_cog_uk {
         uk_remove_duplicates_rootbiosample_by_date(uk_remove_duplicates_biosamplesourceid_by_date.out.uk_fasta_updated, uk_remove_duplicates_biosamplesourceid_by_date.out.uk_metadata_updated)
     emit:
         fasta = uk_remove_duplicates_rootbiosample_by_date.out.uk_fasta_updated
-        metadata = uk_remove_duplicates_rootbiosample_by_gaps.out.uk_metadata_updated
+        metadata = uk_remove_duplicates_rootbiosample_by_date.out.uk_metadata_updated
         all_fasta = uk_unify_headers.out
 }
 
