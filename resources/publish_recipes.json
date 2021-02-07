@@ -29,13 +29,13 @@
     {
       "suffix": "consortium",
       "data": "cog_global",
-      "metadata_fields": ["sequence_name","cog_id","gisaid_id","sample_date","epi_week","submission_org_code","root_sample_id","country","adm1","adm2","outer_postcode","adm2_raw","adm2_source","nuts1","region","latitude","longitude","location","source_age","source_sex","sample_type_collected","sample_type_received","swab_site","ct_n_ct_value","ct_n_test_kit","ct_n_test_platform","ct_n_test_target","pillar_2","is_surveillance","is_travel_history","travel_history","lineage","lineage_support","lineages_version"],
+      "metadata_fields": ["sequence_name","cog_id","gisaid_id","sample_date","epi_week","submission_org_code","root_sample_id","country","adm1","adm2","outer_postcode","adm2_raw","adm2_source","NUTS1","region","latitude","longitude","location","source_age","source_sex","sample_type_collected","sample_type_received","swab_site","ct_n_ct_value","ct_n_test_kit","ct_n_test_platform","ct_n_test_target","pillar_2","is_surveillance","is_travel_history","travel_history","lineage","lineage_support","lineages_version"],
       "where": "gisaid_id=covv_accession_id cog_id=central_sample_id"
     },
     {
       "suffix": "geography",
       "data": "cog_global",
-      "metadata_fields": ["central_sample_id","sequence_name","sample_date","epi_week","country","adm1","adm2","outer_postcode","adm2_raw","adm2_source","nuts1","region","latitude","longitude","location"],
+      "metadata_fields": ["central_sample_id","sequence_name","sample_date","epi_week","country","adm1","adm2","outer_postcode","adm2_raw","adm2_source","NUTS1","region","latitude","longitude","location"],
       "mutations": true
     },
     {
