@@ -73,7 +73,7 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
 
     if info_dict["fasta"]:
         csv_end = "_metadata.csv"
-        if info_dict["metadata_fields"]:
+        if info_dict["fasta"]=="aligned" or (info_dict["metadata_fields"] and info_dict["fasta"]!="unaligned"):
             info_dict["out_fa"] = "%s_alignment.fa" %start
         else:
             info_dict["out_fa"] = "%s.fa" %start
