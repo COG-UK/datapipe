@@ -102,6 +102,7 @@ process uk_alignment {
     gofasta sam toMultiAlign -t ${task.cpus} \
       --samfile ${uk_sam} \
       --reference ${reference_fasta} \
+      --pad \
       -o uk_alignment.fasta
     """
 }
