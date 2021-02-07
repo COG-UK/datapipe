@@ -16,7 +16,7 @@
     {
       "fasta": "trimmed",
       "metadata_fields": ["sequence_name", "secondary_identifier", "sample_date", "epi_week", "country", "adm1", "adm2", "outer_postcode", "is_surveillance", "is_community", "is_hcw", "is_travel_history", "travel_history", "lineage", "lineage_support", "lineages_version"],
-      "where": "epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability, lineages_version=pangoLEARN_version"
+      "where": "epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version"
     }
   ],
   "metadata": [

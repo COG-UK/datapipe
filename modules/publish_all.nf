@@ -41,7 +41,7 @@ process combine_cog_gisaid {
                           d614g n439k p323l a222v y453f n501y t1001i p681h q27stop del_21765_6 del_1605_3 \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target why_excluded \
-          --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangLEARN_version \
+          --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version \
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
           --restrict
