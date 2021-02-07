@@ -321,7 +321,7 @@ process uk_remove_duplicates_rootbiosample_by_date {
 }
 
 
-workflow deduplicate_cog_uk {
+workflow deduplicate_by_cogid_cog_uk {
     take:
         uk_fasta
         uk_metadata
@@ -329,17 +329,27 @@ workflow deduplicate_cog_uk {
         uk_annotate_with_unmapped_genome_completeness(uk_fasta, uk_metadata)
         uk_remove_duplicates_COGID_by_proportionN(uk_fasta, uk_annotate_with_unmapped_genome_completeness.out)
         uk_unify_headers(uk_remove_duplicates_COGID_by_proportionN.out.uk_fasta_updated, uk_remove_duplicates_COGID_by_proportionN.out.uk_metadata_updated)
-        uk_remove_duplicates_biosamplesourceid_by_date(uk_unify_headers.out, uk_remove_duplicates_COGID_by_proportionN.out.uk_metadata_updated)
+    emit:
+        fasta = uk_unify_headers.out
+        metadata = uk_remove_duplicates_COGID_by_proportionN.out.uk_metadata_updated
+}
+
+workflow deduplicate_by_biosample_cog_uk {
+    take:
+        uk_fasta
+        uk_metadata
+    main:
+        uk_remove_duplicates_biosamplesourceid_by_date(uk_fasta, uk_metadata)
         uk_remove_duplicates_rootbiosample_by_date(uk_remove_duplicates_biosamplesourceid_by_date.out.uk_fasta_updated, uk_remove_duplicates_biosamplesourceid_by_date.out.uk_metadata_updated)
     emit:
         fasta = uk_remove_duplicates_rootbiosample_by_date.out.uk_fasta_updated
         metadata = uk_remove_duplicates_rootbiosample_by_date.out.uk_metadata_updated
-        all_fasta = uk_unify_headers.out
 }
 
 
 workflow {
     uk_fasta = file(params.uk_fasta)
     uk_metadata = file(params.uk_metadata)
-    deduplicate_cog_uk(uk_fasta, uk_metadata)
+    deduplicate_by_cogid_cog_uk(uk_fasta, uk_metadata)
+    deduplicate_by_biosample_cog_uk(deduplicate_by_cogid_cog_uk.out.fasta, deduplicate_by_cogid_cog_uk.out.metadata)
 }
