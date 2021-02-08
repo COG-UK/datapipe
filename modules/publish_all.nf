@@ -232,7 +232,7 @@ process publish_recipes {
     path combined_variants
 
     output:
-    path "*/cog_*.csv"
+    path "*/cog_*.csv", emit: csv
     path "*/cog_*.fa"
 
     script:
@@ -261,14 +261,18 @@ process announce_to_webhook {
         """
         echo '{{"text":"' > announce.json
         echo "*Datapipe Complete*\\n" >> announce.json
-        echo "> Dev outputs in : ${params.publish_dev}\\n" >> {log}
-        ls -R ${params.publish_dev} >> announce.json
-        echo "> Publishable outputs in : ${params.publish}\\n" >> {log}
-        ls -R ${params.publish} >> announce.json
+        echo "> Dev outputs in : ${publish_dev}\\n" >> announce.json
+        ls -R ${publish_dev} >> announce.json
+        echo "> Publishable outputs in : ${publish_dir}\\n" >> announce.json
+        ls -R ${publish_dir} >> announce.json
         echo '"}}' >> announce.json
         echo 'webhook {params.webhook}'
 
         curl -X POST -H "Content-type: application/json" -d @announce.json {params.webhook}
+        """
+    else
+        """
+        touch "announce.json"
         """
 }
 
@@ -293,7 +297,7 @@ workflow publish_all {
         add_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
         publish_recipes(uk_unaligned_fasta,uk_aligned_fasta,uk_fasta,combine_cog_gisaid.out.fasta, \
                         uk_metadata,add_geography_to_metadata.out.metadata,uk_variants,combine_variants.out)
-        announce_to_webhook(publish_recipes.out)
+        announce_to_webhook(publish_recipes.out.csv)
 }
 
 
