@@ -36,7 +36,7 @@
     {
       "suffix": "geography",
       "data": "cog_global",
-      "metadata_fields": ["central_sample_id","sequence_name","sample_date","epi_week","country","adm1","adm2","outer_postcode","adm2_raw","adm2_source","NUTS1","region","latitude","longitude","location"],
+      "metadata_fields": ["central_sample_id","sequence_name","sample_date","epi_week","country","adm1","adm2","outer_postcode","adm2_raw","adm2_source","NUTS1","region","latitude","longitude","location"]
     },
     {
       "suffix": "mutations",
