@@ -5,8 +5,7 @@ nextflow.preview.dsl = 2
 // import modules
 include { preprocess_cog_uk } from '../modules/preprocess_cog_uk.nf'
 include { pangolin_cog_uk } from '../modules/pangolin_cog_uk.nf'
-include { deduplicate_by_cogid_cog_uk } from '../modules/deduplicate_cog_uk.nf'
-include { deduplicate_by_biosample_cog_uk } from '../modules/deduplicate_cog_uk.nf'
+include { deduplicate_cog_uk } from '../modules/deduplicate_cog_uk.nf'
 include { align_and_variant_call_cog_uk } from '../modules/align_and_variant_call_cog_uk.nf'
 include { filter_and_trim_cog_uk } from '../modules/filter_and_trim_cog_uk.nf'
 include { publish_all } from '../modules/publish_all.nf'
