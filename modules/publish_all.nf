@@ -204,6 +204,29 @@ process add_geography_to_metadata {
 }
 
 
+process split_recipes {
+    output:
+    path "*.json"
+
+    script:
+    """
+    #!/usr/bin/env python3
+    import json
+    i = 0
+
+    with open("${recipes}", 'r') as f:
+        recipes = json.load(f)
+
+        for d in recipes:
+            for entry in recipes[d]:
+                new_recipes = {d:[entry]}
+                with open("%i.json" %i, 'w') as handle:
+                    json.dump(new_recipes,handle)
+                i += 1
+    """
+}
+
+
 process publish_recipes {
     /**
     * Publishes subsets of combined FASTA and METADATA for COG-UK and GISAID
@@ -213,8 +236,7 @@ process publish_recipes {
     * @output many
     */
 
-    publishDir "${publish_dir}/", pattern: "*/*.csv", mode: 'copy'
-    publishDir "${publish_dir}/", pattern: "*/*.fa", mode: 'copy'
+    publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy'
 
     input:
     path uk_unaligned_fasta
@@ -225,10 +247,10 @@ process publish_recipes {
     path combined_metadata
     path uk_variants
     path combined_variants
+    path recipe
 
     output:
-    path "*/cog_*.csv", emit: csv
-    path "*/cog_*.fa"
+    path "*/cog_*.*", emit: csv
 
     script:
     """
@@ -241,7 +263,7 @@ process publish_recipes {
       --cog_global_metadata ${combined_metadata} \
       --cog_variants ${uk_variants} \
       --cog_global_variants ${combined_variants} \
-      --recipes ${recipes} \
+      --recipes ${recipe} \
       --date ${params.date}
     """
 }
@@ -290,9 +312,13 @@ workflow publish_all {
         combine_variants(uk_fasta, uk_variants, gisaid_fasta, gisaid_variants)
         uk_geography(uk_fasta, uk_metadata)
         add_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
+        split_recipes()
+        recipe_ch = split_recipes.out.flatten()
         publish_recipes(uk_unaligned_fasta,uk_aligned_fasta,uk_fasta,combine_cog_gisaid.out.fasta, \
-                        uk_metadata,add_geography_to_metadata.out.metadata,uk_variants,combine_variants.out)
-        announce_to_webhook(publish_recipes.out.csv)
+                        uk_metadata,add_geography_to_metadata.out.metadata,uk_variants,combine_variants.out, \
+                        recipe_ch)
+        outputs_ch = publish_recipes.out.csv.collect()
+        announce_to_webhook(outputs_ch)
 }
 
 
