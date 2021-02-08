@@ -252,6 +252,27 @@ process publish_recipes {
 }
 
 
+process announce_to_webhook {
+    input:
+    path published_files
+
+    script:
+    if (params.webhook)
+        """
+        echo '{{"text":"' > announce.json
+        echo "*Datapipe Complete*\\n" >> announce.json
+        echo "> Dev outputs in : ${params.publish_dev}\\n" >> {log}
+        ls -R ${params.publish_dev} >> announce.json
+        echo "> Publishable outputs in : ${params.publish}\\n" >> {log}
+        ls -R ${params.publish} >> announce.json
+        echo '"}}' >> announce.json
+        echo 'webhook {params.webhook}'
+
+        curl -X POST -H "Content-type: application/json" -d @announce.json {params.webhook}
+        """
+}
+
+
 geography_utils = file(params.uk_geography)
 recipes = file(params.publish_recipes)
 
@@ -272,7 +293,7 @@ workflow publish_all {
         add_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
         publish_recipes(uk_unaligned_fasta,uk_aligned_fasta,uk_fasta,combine_cog_gisaid.out.fasta, \
                         uk_metadata,add_geography_to_metadata.out.metadata,uk_variants,combine_variants.out)
-
+        announce_to_webhook(publish_recipes.out)
 }
 
 
