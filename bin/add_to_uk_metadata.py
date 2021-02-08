@@ -48,6 +48,11 @@ def add_sample_date(row, date_dict):
         except:
             row["sample_date"] = ""
 
+def add_source_id(row):
+    row["source_id"] = row["biosample_source_id"]
+    if row["root_biosample_source_id"] not in [None,""]:
+        row["source_id"] = row["root_biosample_source_id"]
+
 def add_pillar_2(row):
     if row['collection_pillar'] == 2 or row['central_sample_id'][0:4] in ["ALDP", "CAMC", "MILK", "QEUH"]:
         row["pillar_2"] = True
@@ -151,7 +156,7 @@ def main():
 
     date_dict = load_updated_dates(args.updated_date_file)
     accession_dict = load_accession(args.accession_file, log_handle)
-    new_columns = ["sample_date", "pillar_2", "sequence_name", "covv_accession_id", "edin_epi_week", "edin_epi_day", "why_excluded"]
+    new_columns = ["sample_date", "source_id", "pillar_2", "sequence_name", "covv_accession_id", "edin_epi_week", "edin_epi_day", "why_excluded"]
 
     with open(args.in_metadata, 'r', newline = '') as csv_in, \
          open(args.out_metadata, 'w', newline = '') as csv_out:
@@ -163,6 +168,7 @@ def main():
         for row in reader:
             try:
                 add_sample_date(row, date_dict)
+                add_source_id(row)
                 add_pillar_2(row)
                 add_sequence_name(row)
                 add_covv_accession_id(row, accession_dict)

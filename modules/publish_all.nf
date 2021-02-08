@@ -33,7 +33,7 @@ process combine_cog_gisaid {
           --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
                           pillar_2 \
                           sequence_name sample_date epi_week \
-                          country adm1 adm2 outer_postcode adm2_raw adm2_source nuts1 region latitude longitude location \
+                          country adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
                           submission_org_code is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
                           lineage lineage_support lineages_version \
@@ -160,7 +160,8 @@ process uk_geography {
       --in-metadata ${uk_metadata} \
       --index-column sequence_name \
       --filter-column central_sample_id sequence_name sample_date epi_week \
-                      adm0 adm1 adm2 adm2_private \
+                      adm0 adm1 adm2 adm2_private adm1_UK \
+      --where-column adm1_UK=adm1 \
       --out-fasta geography_tmp/fetch.fa \
       --out-metadata geography_tmp/fetch.csv \
       --restrict

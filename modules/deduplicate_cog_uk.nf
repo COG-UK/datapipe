@@ -148,9 +148,9 @@ process uk_unify_headers {
 }
 
 
-process uk_remove_duplicates_biosamplesourceid_by_date {
+process uk_label_sourceid_duplicates_to_omit {
     /**
-    * Where duplicate biosample_source_id, keeps the earliest
+    * Where duplicate source_id, labels all but the earliest as duplicates
     * @input uk_fasta, uk_metadata
     * @output uk_fasta_updated, uk_metadata_updated
     */
@@ -158,21 +158,17 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
     publishDir "${publish_dev}/", pattern: "*.log", mode: 'copy'
 
     input:
-    path uk_fasta
     path uk_metadata
 
     output:
-    path "${uk_fasta.baseName}.deduplicated_by_biosamplesourceid.fa", emit: uk_fasta_updated
-    path "${uk_metadata.baseName}.deduplicated_by_biosamplesourceid.csv", emit: uk_metadata_updated
-    path "deduplicated_by_biosamplesourceid.log", emit: deduplicate_log
+    path "${uk_metadata.baseName}.deduplicated_by_sourceid.csv", emit: uk_metadata_updated
+    path "deduplicated_by_sourceid.log", emit: deduplicate_log
 
     script:
     """
     #!/usr/bin/env python3
     from Bio import SeqIO
     import csv
-
-    alignment = SeqIO.index("${uk_fasta}", "fasta")
 
     dup_dict = {}
     tokeep = set()
@@ -181,10 +177,8 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
 
         for row in reader:
-            if row["why_excluded"]:
-                continue
             fasta_header = row["sequence_name"]
-            id = row["biosample_source_id"]
+            id = row["source_id"]
             epi_day = int(row["edin_epi_day"])
             completeness = float(row["unmapped_genome_completeness"])
 
@@ -200,7 +194,7 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
             else:
                 dup_dict[id] = [{"fasta_header": fasta_header, "epi_day": epi_day, "completeness":completeness}]
 
-    with open("deduplicated_by_biosamplesourceid.log", "w") as log:
+    with open("deduplicated_by_sourceid.log", "w") as log:
         for k,v in dup_dict.items():
             tokeep.add(v[0]["fasta_header"])
             if len(v) > 1:
@@ -211,117 +205,23 @@ process uk_remove_duplicates_biosamplesourceid_by_date {
 
 
     with open("${uk_metadata}", 'r', newline = '') as csv_in, \
-         open("${uk_metadata.baseName}.deduplicated_by_biosamplesourceid.csv", 'w', newline = '') as csv_out, \
-         open("${uk_fasta.baseName}.deduplicated_by_biosamplesourceid.fa", 'w') as fasta_out:
+         open("${uk_metadata.baseName}.deduplicated_by_sourceid.csv", 'w', newline = '') as csv_out:
 
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
-        writer = csv.DictWriter(csv_out, fieldnames = reader.fieldnames, delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
+        writer = csv.DictWriter(csv_out, fieldnames = reader.fieldnames + ["duplicate"], delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
         writer.writeheader()
 
         for row in reader:
-            if row["why_excluded"]:
-                writer.writerow(row)
-                continue
+            row["duplicate"] = None
             fasta_header = row["sequence_name"]
-            if fasta_header in tokeep:
-                writer.writerow(row)
-                seqrec = alignment[fasta_header]
-                fasta_out.write(">" + seqrec.id + "\\n")
-                fasta_out.write(str(seqrec.seq) + "\\n")
-            else:
-                row["why_excluded"] = "duplicate biosample_source_id"
-                writer.writerow(row)
-    """
-}
-
-process uk_remove_duplicates_rootbiosample_by_date {
-    /**
-    * Where duplicate root_biosample, keeps the oldest
-    * @input uk_fasta, uk_metadata
-    * @output uk_fasta_updated, uk_metadata_updated
-    * @params date
-    */
-
-    publishDir "${publish_dev}/", pattern: "*.log", mode: 'copy'
-
-    input:
-    path uk_fasta
-    path uk_metadata
-
-    output:
-    path "${uk_fasta.baseName}.deduplicated_by_rootbiosample.fa", emit: uk_fasta_updated
-    path "${uk_metadata.baseName}.deduplicated_by_rootbiosample.csv", emit: uk_metadata_updated
-    path "deduplicated_by_rootbiosample.log", emit: deduplicate_log
-
-    script:
-    """
-    #!/usr/bin/env python3
-    from Bio import SeqIO
-    import csv
-
-    alignment = SeqIO.index("${uk_fasta}", "fasta")
-
-    dup_dict = {}
-    tokeep = set()
-
-    with open("${uk_metadata}", 'r', newline = '') as csv_in:
-        reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
-
-        for row in reader:
-            if row["why_excluded"]:
-                continue
-            fasta_header = row["sequence_name"]
-            id = row["root_biosample_source_id"]
-            epi_day = int(row["edin_epi_day"])
-            completeness = float(row["unmapped_genome_completeness"])
-
-            if id in ["None", "", None]:
-                tokeep.add(fasta_header)
-                continue
-
-            if id in dup_dict:
-                if epi_day < dup_dict[id][0]["epi_day"]:
-                    dup_dict[id].insert(0, {"fasta_header": fasta_header, "epi_day": epi_day, "completeness":completeness})
-                else:
-                    dup_dict[id].append({"fasta_header": fasta_header, "epi_day": epi_day, "completeness":completeness})
-            else:
-                dup_dict[id] = [{"fasta_header": fasta_header, "epi_day": epi_day, "completeness":completeness}]
-
-        with open("deduplicated_by_rootbiosample.log", "w") as log:
-            for k,v in dup_dict.items():
-                tokeep.add(v[0]["fasta_header"])
-                if len(v) > 1:
-                    for dup in v[1:]:
-                        log.write("For id %s, %s epi_day:%s completeness:%s kept, %s epi_day:%s completeness:%s removed as duplicate\\n" \
-                        %(k, v[0]["fasta_header"], v[0]["epi_day"], v[0]["completeness"], dup["fasta_header"], \
-                                    dup["epi_day"], dup["completeness"]))
-
-    with open("${uk_metadata}", 'r', newline = '') as csv_in, \
-         open("${uk_metadata.baseName}.deduplicated_by_rootbiosample.csv", 'w', newline = '') as csv_out, \
-         open("${uk_fasta.baseName}.deduplicated_by_rootbiosample.fa", 'w') as fasta_out:
-
-        reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
-        writer = csv.DictWriter(csv_out, fieldnames = reader.fieldnames, delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
-        writer.writeheader()
-
-        for row in reader:
-            if row["why_excluded"]:
-                writer.writerow(row)
-                continue
-            fasta_header = row["sequence_name"]
-            if fasta_header in tokeep:
-                writer.writerow(row)
-                seqrec = alignment[fasta_header]
-                fasta_out.write(">" + seqrec.id + "\\n")
-                fasta_out.write(str(seqrec.seq) + "\\n")
-            else:
-                row["why_excluded"] = "duplicate root_biosample_source_id"
-                writer.writerow(row)
+            if fasta_header not in tokeep:
+                row["duplicate"] = "True"
+            writer.writerow(row)
     """
 }
 
 
-workflow deduplicate_by_cogid_cog_uk {
+workflow deduplicate_cog_uk {
     take:
         uk_fasta
         uk_metadata
@@ -329,27 +229,15 @@ workflow deduplicate_by_cogid_cog_uk {
         uk_annotate_with_unmapped_genome_completeness(uk_fasta, uk_metadata)
         uk_remove_duplicates_COGID_by_proportionN(uk_fasta, uk_annotate_with_unmapped_genome_completeness.out)
         uk_unify_headers(uk_remove_duplicates_COGID_by_proportionN.out.uk_fasta_updated, uk_remove_duplicates_COGID_by_proportionN.out.uk_metadata_updated)
+        uk_label_sourceid_duplicates_to_omit(uk_remove_duplicates_COGID_by_proportionN.out.uk_metadata_updated)
     emit:
         fasta = uk_unify_headers.out
-        metadata = uk_remove_duplicates_COGID_by_proportionN.out.uk_metadata_updated
-}
-
-workflow deduplicate_by_biosample_cog_uk {
-    take:
-        uk_fasta
-        uk_metadata
-    main:
-        uk_remove_duplicates_biosamplesourceid_by_date(uk_fasta, uk_metadata)
-        uk_remove_duplicates_rootbiosample_by_date(uk_remove_duplicates_biosamplesourceid_by_date.out.uk_fasta_updated, uk_remove_duplicates_biosamplesourceid_by_date.out.uk_metadata_updated)
-    emit:
-        fasta = uk_remove_duplicates_rootbiosample_by_date.out.uk_fasta_updated
-        metadata = uk_remove_duplicates_rootbiosample_by_date.out.uk_metadata_updated
+        metadata = uk_label_sourceid_duplicates_to_omit.out.uk_metadata_updated
 }
 
 
 workflow {
     uk_fasta = file(params.uk_fasta)
     uk_metadata = file(params.uk_metadata)
-    deduplicate_by_cogid_cog_uk(uk_fasta, uk_metadata)
-    deduplicate_by_biosample_cog_uk(deduplicate_by_cogid_cog_uk.out.fasta, deduplicate_by_cogid_cog_uk.out.metadata)
+    deduplicate_cog_uk(uk_fasta, uk_metadata)
 }
