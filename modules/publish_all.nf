@@ -236,7 +236,7 @@ process publish_recipes {
     * @output many
     */
 
-    publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy'
+    publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
 
     input:
     path uk_unaligned_fasta
@@ -283,9 +283,9 @@ process announce_to_webhook {
         echo "> Publishable outputs in : ${publish_dir}\\n" >> announce.json
         ls -R ${publish_dir} >> announce.json
         echo '"}}' >> announce.json
-        echo 'webhook {params.webhook}'
+        echo 'webhook ${params.webhook}'
 
-        curl -X POST -H "Content-type: application/json" -d @announce.json {params.webhook}
+        curl -X POST -H "Content-type: application/json" -d @announce.json ${params.webhook}
         """
     else
         """
