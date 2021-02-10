@@ -20,7 +20,7 @@ workflow process_cog_uk {
       pangolin_cog_uk(preprocess_cog_uk.out.fasta, preprocess_cog_uk.out.metadata)
       deduplicate_cog_uk(preprocess_cog_uk.out.fasta, pangolin_cog_uk.out.metadata)
       align_and_variant_call_cog_uk(deduplicate_cog_uk.out.fasta)
-      filter_and_trim_cog_uk(deduplicate_cog_uk.out.fasta, deduplicate_cog_uk.out.metadata)
+      filter_and_trim_cog_uk(align_and_variant_call_cog_uk.out.fasta, deduplicate_cog_uk.out.metadata)
     emit:
       unaligned_fasta = deduplicate_cog_uk.out.fasta
       aligned_fasta = align_and_variant_call_cog_uk.out.fasta
