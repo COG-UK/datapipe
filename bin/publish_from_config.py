@@ -12,16 +12,19 @@ class Error (Exception): pass
 def parse_args():
     parser = argparse.ArgumentParser(description="""Create published files from config file""",
                                     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--unaligned_fasta', dest = 'unaligned_fasta', required=True, help='Raw FASTA')
-    parser.add_argument('--aligned_fasta', dest = 'aligned_fasta', required=True, help='Aligned, masked, untrimmed FASTA')
-    parser.add_argument('--trimmed_fasta', dest = 'trimmed_fasta', required=True, help='Aligned, masked, trimmed and filtered FASTA')
-    parser.add_argument('--cog_global_fasta', dest = 'cog_global_fasta', required=True, help='COG GISAID aligned FASTA')
+    parser.add_argument('--unaligned_fasta', dest = 'unaligned_fasta', required=False, help='Raw FASTA')
+    parser.add_argument('--aligned_fasta', dest = 'aligned_fasta', required=False, help='Aligned, masked, untrimmed FASTA')
+    parser.add_argument('--trimmed_fasta', dest = 'trimmed_fasta', required=False, help='Aligned, masked, trimmed and filtered FASTA')
+    parser.add_argument('--gisaid_fasta', dest = 'global_fasta', required=False, help='GISAID aligned FASTA')
+    parser.add_argument('--cog_global_fasta', dest = 'cog_global_fasta', required=False, help='COG GISAID aligned FASTA')
 
-    parser.add_argument('--cog_metadata', dest = 'cog_metadata', required=True, help='MASSIVE CSV')
-    parser.add_argument('--cog_global_metadata', dest = 'cog_global_metadata', required=True, help='MASSIVE CSV')
+    parser.add_argument('--cog_metadata', dest = 'cog_metadata', required=False, help='MASSIVE CSV')
+    parser.add_argument('--gisaid_metadata', dest = 'global_metadata', required=False, help='MASSIVE CSV')
+    parser.add_argument('--cog_global_metadata', dest = 'cog_global_metadata', required=False, help='MASSIVE CSV')
 
-    parser.add_argument('--cog_variants', dest = 'cog_variants', required=True, help='Mutations CSV')
-    parser.add_argument('--cog_global_variants', dest = 'cog_global_variants', required=True, help='Mutations CSV')
+    parser.add_argument('--cog_variants', dest = 'cog_variants', required=False, help='Mutations CSV')
+    parser.add_argument('--gisaid_variants', dest = 'global_variants', required=False, help='Mutations CSV')
+    parser.add_argument('--cog_global_variants', dest = 'cog_global_variants', required=False, help='Mutations CSV')
 
     parser.add_argument('--recipes', dest = 'recipes', required=True, help='JSON of recipes')
     parser.add_argument('--date', dest = 'date', required=True, help='Datestamp for published files')
@@ -29,16 +32,17 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-#"data": "cog" or "cog_global"
-#"fasta": "unaligned", "aligned", "trimmed", "cog_global"
+#"data": "cog", "gisaid" or "cog_global"
+#"fasta": "unaligned", "aligned", "trimmed", "cog_global" or "gisaid"
 #"metadata_fields": []
 #"mutations": True or False to add columns from mutations
 #"where": free text to be passed to fastafunk fetch --where-column
 #"suffix": something to append to file names
+#"exclude_uk": True or False to exclude samples from UK
 
 def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_dict):
     info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None,
-                 "where": None, "mutations":False, "date": date,
+                 "where": None, "mutations":False, "exclude_uk":False, "date": date,
                  "in_fa":None, "in_csv":None, "in_var":None,
                  "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":None}
     info_dict.update(config_dict)
@@ -47,17 +51,21 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
         info_dict["in_fa"] = fasta_dict[info_dict["fasta"]]
     elif info_dict["data"] == "cog_global":
         info_dict["in_fa"] = fasta_dict["cog_global"]
+    elif info_dict["data"] == "gisaid":
+        info_dict["in_fa"] = fasta_dict["gisaid"]
     elif info_dict["data"] == "cog":
             info_dict["in_fa"] = fasta_dict["trimmed"]
     else:
-        sys.exit("Config entries need to specify either fasta in ['unaligned', 'aligned', 'trimmed', 'cog_global'] or data \
-        in ['cog', 'cog_global']")
+        sys.exit("Config entries need to specify either fasta in ['unaligned', 'aligned', 'trimmed', 'cog_global', 'gisaid'] or data \
+        in ['cog', 'cog_global', 'gisaid']")
 
     if info_dict["data"] is None:
-            if info_dict["fasta"] == "cog_global":
-                info_dict["data"] = "cog_global"
-            else:
-                info_dict["data"] = "cog"
+        if info_dict["fasta"] == "cog_global":
+            info_dict["data"] = "cog_global"
+        elif info_dict["fasta"] == "gisaid":
+            info_dict["data"] = "gisaid"
+        else:
+            info_dict["data"] = "cog"
 
     if info_dict["data"] == "cog_global":
             info_dict["in_csv"] = csv_dict["cog_global"]
@@ -65,6 +73,9 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
     elif info_dict["data"] == "cog":
             info_dict["in_csv"] = csv_dict["cog"]
             info_dict["in_var"] = var_dict["cog"]
+    elif info_dict["data"] == "gisaid":
+            info_dict["in_csv"] = csv_dict["gisaid"]
+            info_dict["in_var"] = var_dict["gisaid"]
 
     start = "%s/%s_%s" %(outdir, info_dict["data"], info_dict["date"])
     if info_dict["suffix"]:
@@ -83,6 +94,13 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
     else:
         info_dict["out_csv"] = "%s%s" %(start, csv_end)
 
+    if info_dict["out_fa"] != "tmp.fa" and info_dict["in_fa"] is None:
+        sys.exit("Please provide the appropriate FASTA file")
+    if (info_dict["out_csv"] != "tmp.csv" or info_dict["out_var"] is not None) and info_dict["in_csv"] is None:
+        sys.exit("Please provide the appropriate CSV file")
+    if info_dict["out_var"] is not None and info_dict["in_var"] is None:
+        sys.exit("Please provide the appropriate mutations file")
+    print(info_dict)
     return info_dict
 
 def syscall(cmd_list, allow_fail=False):
@@ -105,6 +123,13 @@ def publish_file(outdir, info_dict):
         cmd_list = ["cp", info_dict["in_fa"], info_dict["out_fa"]]
         syscall(cmd_list)
         return
+
+    if info_dict["exclude_uk"]:
+        cmd_list = ["head -n1", info_dict["in_csv"], "> no_uk.csv"]
+        syscall(cmd_list)
+        cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -v -E \"^England|^Northern_Ireland|^Wales|^Scotland\"", ">> no_uk.csv"]
+        syscall(cmd_list)
+        info_dict["in_csv"] = "no_uk.csv"
 
     cmd_list = ["fastafunk fetch --in-fasta", info_dict["in_fa"], "--in-metadata", info_dict["in_csv"],
               "--index-column sequence_name --out-fasta", info_dict["out_fa"],
@@ -129,10 +154,13 @@ def publish_file(outdir, info_dict):
 
 def main():
     args = parse_args()
-
-    fasta_dict = {"unaligned":args.unaligned_fasta, "aligned":args.aligned_fasta, "trimmed":args.trimmed_fasta, "cog_global": args.cog_global_fasta}
-    csv_dict = {"cog":args.cog_metadata, "cog_global":args.cog_global_metadata}
-    var_dict = {"cog":args.cog_variants, "cog_global":args.cog_global_variants}
+    print(args)
+    fasta_dict = {"unaligned":args.unaligned_fasta, "aligned":args.aligned_fasta, "trimmed":args.trimmed_fasta, "cog_global": args.cog_global_fasta, "gisaid": args.global_fasta}
+    print(fasta_dict)
+    csv_dict = {"cog":args.cog_metadata, "cog_global":args.cog_global_metadata, "gisaid": args.global_metadata}
+    print(csv_dict)
+    var_dict = {"cog":args.cog_variants, "cog_global":args.cog_global_variants, "gisaid": args.global_variants}
+    print(var_dict)
 
     recipes = {}
     with open(args.recipes, 'r') as f:

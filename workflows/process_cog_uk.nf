@@ -5,10 +5,10 @@ nextflow.preview.dsl = 2
 // import modules
 include { preprocess_cog_uk } from '../modules/preprocess_cog_uk.nf'
 include { pangolin } from '../modules/pangolin.nf'
-include { deduplicate_cog_uk } from '../modules/deduplicate_cog_uk.nf'
+include { deduplicate_cog_uk } from '../modules/deduplicate.nf'
 include { align_and_variant_call } from '../modules/align_and_variant_call.nf'
-include { filter_and_trim_cog_uk } from '../modules/filter_and_trim_cog_uk.nf'
-include { publish_all } from '../modules/publish_all.nf'
+include { filter_and_trim_cog_uk } from '../modules/filter_and_trim.nf'
+include { publish_cog_global } from '../modules/publish_all.nf'
 
 workflow process_cog_uk {
     take:
@@ -42,12 +42,12 @@ workflow {
     ch_gisaid_metadata = Channel.fromPath(params.gisaid_metadata)
     ch_gisaid_variants = Channel.fromPath(params.gisaid_variants)
 
-    publish_all(process_cog_uk.out.unaligned_fasta,
-                process_cog_uk.out.aligned_fasta,
-                process_cog_uk.out.trimmed_fasta,
-                process_cog_uk.out.metadata,
-                process_cog_uk.out.variants,
-                ch_gisaid_fasta,
-                ch_gisaid_metadata,
-                ch_gisaid_variants)
+    publish_cog_global(process_cog_uk.out.unaligned_fasta,
+                        process_cog_uk.out.aligned_fasta,
+                        process_cog_uk.out.trimmed_fasta,
+                        process_cog_uk.out.metadata,
+                        process_cog_uk.out.variants,
+                        ch_gisaid_fasta,
+                        ch_gisaid_metadata,
+                        ch_gisaid_variants)
 }

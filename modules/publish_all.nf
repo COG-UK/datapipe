@@ -205,6 +205,9 @@ process add_geography_to_metadata {
 
 
 process split_recipes {
+    input:
+    path recipes
+
     output:
     path "*.json"
 
@@ -227,7 +230,7 @@ process split_recipes {
 }
 
 
-process publish_recipes {
+process publish_cog_global_recipes {
     /**
     * Publishes subsets of combined FASTA and METADATA for COG-UK and GISAID
     * @input uk_unaligned_fasta, uk_aligned_fasta, uk_trimmed_fasta, combined_fasta,
@@ -261,6 +264,35 @@ process publish_recipes {
 }
 
 
+process publish_gisaid_recipes {
+    /**
+    * Publishes subsets of combined FASTA and METADATA for COG-UK and GISAID
+    * @input gisaid_unaligned_fasta, gisaid_aligned_fasta, gisaid_trimmed_fasta, combined_fasta,
+    * gisaid_metadata, combined_metadata, gisaid_variants, combined_variants
+    * @params publish_recipes.json
+    * @output many
+    */
+
+    publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
+
+    input:
+    tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_variants),path(recipe)
+
+    output:
+    path "*/gisaid_*.*"
+
+    script:
+    """
+    $project_dir/../bin/publish_from_config.py \
+      --recipes ${recipe} \
+      --date ${params.date} \
+      --gisaid_fasta ${gisaid_fasta} \
+      --gisaid_metadata ${gisaid_metadata} \
+      --gisaid_variants ${gisaid_variants}
+    """
+}
+
+
 process announce_to_webhook {
     input:
     file published_files
@@ -285,9 +317,11 @@ process announce_to_webhook {
 
 
 geography_utils = file(params.uk_geography)
-recipes = file(params.publish_recipes)
+cog_global_recipes = file(params.publish_cog_global_recipes)
+gisaid_recipes = file(params.publish_gisaid_recipes)
 
-workflow publish_all {
+
+workflow publish_cog_global {
     take:
         uk_unaligned_fasta
         uk_aligned_fasta
@@ -302,7 +336,7 @@ workflow publish_all {
         combine_variants(uk_fasta, uk_variants, gisaid_fasta, gisaid_variants)
         uk_geography(uk_fasta, uk_metadata)
         add_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
-        split_recipes()
+        split_recipes(cog_global_recipes)
         recipe_ch = split_recipes.out.flatten()
         uk_unaligned_fasta.combine(uk_aligned_fasta)
                           .combine(uk_fasta)
@@ -313,8 +347,26 @@ workflow publish_all {
                           .combine(combine_variants.out)
                           .combine(recipe_ch)
                           .set{ publish_input_ch }
-        publish_recipes(publish_input_ch)
-        outputs_ch = publish_recipes.out.collect()
+        publish_cog_global_recipes(publish_input_ch)
+        outputs_ch = publish_cog_global_recipes.out.collect()
+        announce_to_webhook(outputs_ch)
+}
+
+
+workflow publish_gisaid {
+    take:
+        gisaid_fasta
+        gisaid_metadata
+        gisaid_variants
+    main:
+        split_recipes(gisaid_recipes)
+        recipe_ch = split_recipes.out.flatten()
+        gisaid_fasta.combine(gisaid_metadata)
+                    .combine(gisaid_variants)
+                    .combine(recipe_ch)
+                    .set{ publish_input_ch }
+        publish_gisaid_recipes(publish_input_ch)
+        outputs_ch = publish_gisaid_recipes.out.collect()
         announce_to_webhook(outputs_ch)
 }
 
