@@ -6,7 +6,7 @@ nextflow.preview.dsl = 2
 include { preprocess_cog_uk } from '../modules/preprocess_cog_uk.nf'
 include { pangolin } from '../modules/pangolin.nf'
 include { deduplicate_cog_uk } from '../modules/deduplicate_cog_uk.nf'
-include { align_and_variant_call_cog_uk } from '../modules/align_and_variant_call_cog_uk.nf'
+include { align_and_variant_call } from '../modules/align_and_variant_call.nf'
 include { filter_and_trim_cog_uk } from '../modules/filter_and_trim_cog_uk.nf'
 include { publish_all } from '../modules/publish_all.nf'
 
@@ -19,14 +19,14 @@ workflow process_cog_uk {
       preprocess_cog_uk(uk_fasta, uk_metadata, uk_accessions)
       pangolin(preprocess_cog_uk.out.fasta, preprocess_cog_uk.out.metadata)
       deduplicate_cog_uk(preprocess_cog_uk.out.fasta, pangolin.out.metadata)
-      align_and_variant_call_cog_uk(deduplicate_cog_uk.out.fasta)
-      filter_and_trim_cog_uk(align_and_variant_call_cog_uk.out.fasta, deduplicate_cog_uk.out.metadata)
+      align_and_variant_call(deduplicate_cog_uk.out.fasta)
+      filter_and_trim_cog_uk(align_and_variant_call.out.fasta, deduplicate_cog_uk.out.metadata)
     emit:
       unaligned_fasta = deduplicate_cog_uk.out.fasta
-      aligned_fasta = align_and_variant_call_cog_uk.out.fasta
+      aligned_fasta = align_and_variant_call.out.fasta
       trimmed_fasta = filter_and_trim_cog_uk.out.fasta
       metadata = filter_and_trim_cog_uk.out.metadata
-      variants = align_and_variant_call_cog_uk.out.variants
+      variants = align_and_variant_call.out.variants
 }
 
 workflow {
