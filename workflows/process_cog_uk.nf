@@ -4,7 +4,7 @@ nextflow.preview.dsl = 2
 
 // import modules
 include { preprocess_cog_uk } from '../modules/preprocess_cog_uk.nf'
-include { pangolin_cog_uk } from '../modules/pangolin_cog_uk.nf'
+include { pangolin } from '../modules/pangolin.nf'
 include { deduplicate_cog_uk } from '../modules/deduplicate_cog_uk.nf'
 include { align_and_variant_call_cog_uk } from '../modules/align_and_variant_call_cog_uk.nf'
 include { filter_and_trim_cog_uk } from '../modules/filter_and_trim_cog_uk.nf'
@@ -17,8 +17,8 @@ workflow process_cog_uk {
       uk_accessions
     main:
       preprocess_cog_uk(uk_fasta, uk_metadata, uk_accessions)
-      pangolin_cog_uk(preprocess_cog_uk.out.fasta, preprocess_cog_uk.out.metadata)
-      deduplicate_cog_uk(preprocess_cog_uk.out.fasta, pangolin_cog_uk.out.metadata)
+      pangolin(preprocess_cog_uk.out.fasta, preprocess_cog_uk.out.metadata)
+      deduplicate_cog_uk(preprocess_cog_uk.out.fasta, pangolin.out.metadata)
       align_and_variant_call_cog_uk(deduplicate_cog_uk.out.fasta)
       filter_and_trim_cog_uk(align_and_variant_call_cog_uk.out.fasta, deduplicate_cog_uk.out.metadata)
     emit:
