@@ -103,24 +103,24 @@ process combine_variants {
     with open("${uk_variants}", "r") as COG_variants_in, \
          open("${gisaid_variants}", "r") as GISAID_variants_in, \
          open("cog_gisaid_variants.csv", "w") as variants_out:
-        for line in GISAID_variants_in:
-            if first:
-                variants_out.write(line)
-                first = False
-                continue
-
-            sample = line.strip().split(",")[0]
-            if sample in GISAID_fasta:
-                variants_out.write(line)
-
-        first = True
         for line in COG_variants_in:
             if first:
+                variants_out.write(line)
                 first = False
                 continue
 
             sample = line.strip().split(",")[0]
             if sample in COG_fasta:
+                variants_out.write(line)
+
+        first = True
+        for line in GISAID_variants_in:
+            if first:
+                first = False
+                continue
+
+            sample = line.strip().split(",")[0]
+            if sample in GISAID_fasta:
                 variants_out.write(line)
     """
 }
@@ -279,7 +279,10 @@ process publish_gisaid_recipes {
     tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_variants),path(recipe)
 
     output:
-    path "*/gisaid_*.*"
+    path "*/gisaid_*.*", emit: all
+    path "*/gisaid_*_global_alignment.fa", optional: true, emit: fasta
+    path "*/gisaid_*_global_metadata.csv", optional: true, emit: metadata
+    path "*/gisaid_*_global_variants.csv", optional: true, emit: variants
 
     script:
     """
@@ -366,8 +369,12 @@ workflow publish_gisaid {
                     .combine(recipe_ch)
                     .set{ publish_input_ch }
         publish_gisaid_recipes(publish_input_ch)
-        outputs_ch = publish_gisaid_recipes.out.collect()
+        outputs_ch = publish_gisaid_recipes.out.all.collect()
         announce_to_webhook(outputs_ch)
+    emit:
+        fasta = publish_gisaid_recipes.out.fasta
+        metadata = publish_gisaid_recipes.out.metadata
+        variants = publish_gisaid_recipes.out.variants
 }
 
 

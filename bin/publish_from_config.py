@@ -108,6 +108,7 @@ def syscall(cmd_list, allow_fail=False):
         print('None in list', cmd_list, file=sys.stderr)
         raise Error('Error in command. Cannot continue')
     command = ' '.join(cmd_list)
+    print(command)
     completed_process = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
     if (not allow_fail) and completed_process.returncode != 0:
         print('Error running this command:', command, file=sys.stderr)
@@ -147,10 +148,10 @@ def publish_file(outdir, info_dict):
         "--join-on query --out-metadata", info_dict["out_var"]]
         syscall(cmd_list)
 
-    tmp = glob.glob("tmp.*")
-    if len(tmp) > 0:
-        cmd_list = ["rm tmp.*"]
-        syscall(cmd_list)
+    #tmp = glob.glob("tmp.*")
+    #if len(tmp) > 0:
+    #    cmd_list = ["rm tmp.*"]
+    #    syscall(cmd_list)
 
 def main():
     args = parse_args()
