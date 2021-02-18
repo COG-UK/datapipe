@@ -17,6 +17,7 @@ process check_for_pangolin_update {
     PANGO_VERSION=\$(pangolin -pv)
     echo \$PANGO_VERSION
     pangolin --update
+    sleep 5s
     NEW_PANGO_VERSION=\$(pangolin -pv)
     echo \$NEW_PANGO_VERSION
     if [ "\$PANGO_VERSION" == "\$NEW_PANGO_VERSION" ]; then
