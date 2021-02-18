@@ -62,6 +62,8 @@ process gisaid_add_columns_to_metadata {
             row['sequence_name'] = new_header
             if edin_header not in alignment:
                 row['why_excluded'] = "filtered during loading from JSON"
+            elif row["edin_epi_day"] == '':
+                row['why_excluded'] = "no date"
             else:
                 row['why_excluded'] = ""
             writer.writerow(row)
