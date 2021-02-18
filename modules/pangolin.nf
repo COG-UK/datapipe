@@ -151,8 +151,12 @@ workflow pangolin {
     main:
         check_for_pangolin_update()
         extract_sequences_for_pangolin(in_fasta, in_metadata, check_for_pangolin_update.out)
-        run_pangolin(extract_sequences_for_pangolin.out.pangolin_fasta)
-        add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, run_pangolin.out)
+        extract_sequences_for_pangolin.out.pangolin_fasta.splitFasta( by: params.chunk_size, file: true )
+                                                         .set{ pangolin_chunks }
+        run_pangolin(pangolin_chunks)
+        run_pangolin.out.collectFile(newLine: true, keepHeader: true, skip: 1)
+                        .set{ pangolin_result }
+        add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, pangolin_result)
     emit:
         metadata = add_new_pangolin_lineages_to_metadata.out
 }
