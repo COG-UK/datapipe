@@ -12,7 +12,6 @@ process gisaid_process_json {
     * @output gisaid_fasta, gisaid_metadata
     * @params gisaid_omissions
     */
-    memory params.max_ram + ' GB'
 
     input:
     path json
@@ -76,11 +75,15 @@ workflow preprocess_gisaid {
     take:
         gisaid_json
     main:
-        gisaid_process_json(gisaid_json)
+        gisaid_json.splitText( by: params.chunk_size, file: true ).set{ json_chunks }
+        gisaid_process_json(json_chunks)
         gisaid_add_columns_to_metadata(gisaid_process_json.out.fasta, gisaid_process_json.out.metadata)
+        gisaid_process_json.out.fasta.collectFile(newLine: true).set{ fasta_result }
+        gisaid_add_columns_to_metadata.out.collectFile(newLine: true, keepHeader: true, skip: 1)
+                                          .set{ metadata_result }
     emit:
-        fasta = gisaid_process_json.out.fasta
-        metadata = gisaid_add_columns_to_metadata.out
+        fasta = fasta_result
+        metadata = metadata_result
 }
 
 
