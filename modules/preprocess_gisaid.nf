@@ -12,6 +12,7 @@ process gisaid_process_json {
     * @output gisaid_fasta, gisaid_metadata
     * @params gisaid_omissions
     */
+    memory params.max_ram + ' GB'
 
     input:
     path json
