@@ -13,19 +13,25 @@ process check_for_pangolin_update {
     env PANGOLIN_UPDATED
 
     script:
-    """
-    PANGO_VERSION=\$(pangolin -pv)
-    echo \$PANGO_VERSION
-    pangolin --update
-    sleep 5s
-    NEW_PANGO_VERSION=\$(pangolin -pv)
-    echo \$NEW_PANGO_VERSION
-    if [ "\$PANGO_VERSION" == "\$NEW_PANGO_VERSION" ]; then
-        PANGOLIN_UPDATED=false
+    if ( params.auto_update_pangolin )
+        """
+        PANGO_VERSION=\$(pangolin -pv)
+        echo \$PANGO_VERSION
+        pangolin --update
+        sleep 5s
+        NEW_PANGO_VERSION=\$(pangolin -pv)
+        echo \$NEW_PANGO_VERSION
+        if [ "\$PANGO_VERSION" == "\$NEW_PANGO_VERSION" ]; then
+            PANGOLIN_UPDATED=false
+        else
+            PANGOLIN_UPDATED=true
+        fi
+        """
     else
-        PANGOLIN_UPDATED=true
-    fi
-    """
+        """
+        PANGOLIN_UPDATED=false
+        """
+
 }
 
 
