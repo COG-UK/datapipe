@@ -5,6 +5,7 @@ nextflow.preview.dsl = 2
 // import modules
 include { preprocess_cog_uk } from '../modules/preprocess_cog_uk.nf'
 include { pangolin } from '../modules/pangolin.nf'
+include { check_for_pangolin_update } from '../modules/pangolin.nf'
 include { deduplicate_cog_uk } from '../modules/deduplicate.nf'
 include { align_and_variant_call } from '../modules/align_and_variant_call.nf'
 include { filter_and_trim_cog_uk } from '../modules/filter_and_trim.nf'
@@ -15,11 +16,12 @@ workflow process_cog_uk {
       uk_fasta
       uk_metadata
       uk_accessions
+      pangolin_updated
     main:
       preprocess_cog_uk(uk_fasta, uk_metadata, uk_accessions)
-      pangolin(preprocess_cog_uk.out.fasta, preprocess_cog_uk.out.metadata)
+      pangolin(preprocess_cog_uk.out.fasta, preprocess_cog_uk.out.metadata, pangolin_updated)
       deduplicate_cog_uk(preprocess_cog_uk.out.fasta, pangolin.out.metadata)
-      align_and_variant_call(deduplicate_cog_uk.out.fasta)
+      align_and_variant_call(deduplicate_cog_uk.out.fasta, "cog")
       filter_and_trim_cog_uk(align_and_variant_call.out.fasta, deduplicate_cog_uk.out.metadata)
     emit:
       unaligned_fasta = deduplicate_cog_uk.out.fasta
@@ -34,9 +36,11 @@ workflow {
     ch_uk_metadata = Channel.fromPath(params.uk_metadata)
     ch_uk_accessions = Channel.fromPath(params.uk_accessions)
 
+    check_for_pangolin_update()
     process_cog_uk(ch_uk_fasta,
                    ch_uk_metadata,
-                   ch_uk_accessions)
+                   ch_uk_accessions,
+                   check_for_pangolin_update.out)
 
     ch_gisaid_fasta = Channel.fromPath(params.gisaid_fasta)
     ch_gisaid_metadata = Channel.fromPath(params.gisaid_metadata)

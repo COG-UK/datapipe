@@ -155,9 +155,9 @@ workflow pangolin {
     take:
         in_fasta
         in_metadata
+        pangolin_updated
     main:
-        check_for_pangolin_update()
-        extract_sequences_for_pangolin(in_fasta, in_metadata, check_for_pangolin_update.out)
+        extract_sequences_for_pangolin(in_fasta, in_metadata, pangolin_updated)
         extract_sequences_for_pangolin.out.pangolin_fasta.splitFasta( by: params.chunk_size, file: true )
                                                          .set{ pangolin_chunks }
         run_pangolin(pangolin_chunks)
@@ -172,6 +172,7 @@ workflow pangolin {
 workflow {
     uk_fasta = file(params.uk_fasta)
     uk_metadata = file(params.uk_metadata)
+    check_for_pangolin_update()
 
-    pangolin(uk_fasta, uk_metadata)
+    pangolin(uk_fasta, uk_metadata, check_for_pangolin_update.out)
 }

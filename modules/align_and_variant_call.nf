@@ -41,9 +41,10 @@ process get_variants {
 
     input:
     path sam
+    val category
 
     output:
-    path "${params.category}.variants.csv"
+    path "${category}.variants.csv"
 
     script:
     """
@@ -51,7 +52,7 @@ process get_variants {
       --samfile ${sam} \
       --reference ${reference_fasta} \
       --genbank ${reference_genbank} \
-      --outfile ${params.category}.variants.csv
+      --outfile ${category}.variants.csv
     """
 }
 
@@ -66,18 +67,19 @@ process get_indels {
 
     input:
     path sam
+    val category
 
     output:
-    path "${params.category}.insertions.csv", emit: insertions
-    path "${params.category}.deletions.csv", emit: deletions
+    path "${category}.insertions.csv", emit: insertions
+    path "${category}.deletions.csv", emit: deletions
 
     script:
     """
     gofasta sam indels \
       -s ${sam} \
       --threshold 2 \
-      --insertions-out "${params.category}.insertions.csv" \
-      --deletions-out "${params.category}.deletions.csv"
+      --insertions-out "${category}.insertions.csv" \
+      --deletions-out "${category}.deletions.csv"
     """
 }
 
@@ -142,13 +144,14 @@ process get_snps {
 
     input:
     path alignment
+    val category
 
     output:
-    path "${params.category}.snps.csv"
+    path "${category}.snps.csv"
 
     script:
     """
-    gofasta snps -r ${reference_fasta} -q ${alignment} -o ${params.category}.snps.csv
+    gofasta snps -r ${reference_fasta} -q ${alignment} -o ${category}.snps.csv
     """
 }
 
@@ -160,21 +163,23 @@ process type_AAs_and_dels {
     * @params reference_fasta, del_file, aa_file
     */
 
-    publishDir "${publish_dev}/${params.category}", pattern: "*.csv", mode: 'copy', saveAs: {"${params.category}_variants.csv"}
+    publishDir "${publish_dev}/", pattern: "*/*.csv", mode: 'copy'
 
     input:
     path alignment
     path metadata
+    val category
 
     output:
-    path "${metadata.baseName}.typed.csv"
+    path "${category}/${category}_variants.csv"
 
     script:
     """
+    mkdir -p ${category}
     $project_dir/../bin/type_aas_and_dels.py \
       --in-fasta ${alignment} \
       --in-metadata ${metadata} \
-      --out-metadata ${metadata.baseName}.typed.csv \
+      --out-metadata ${category}/${category}_variants.csv \
       --reference-fasta ${reference_fasta} \
       --aas ${aas} \
       --dels ${dels} \
@@ -185,14 +190,15 @@ process type_AAs_and_dels {
 workflow align_and_variant_call {
     take:
         in_fasta
+        category
     main:
         minimap2_to_reference(in_fasta)
-        get_variants(minimap2_to_reference.out)
-        get_indels(minimap2_to_reference.out)
+        get_variants(minimap2_to_reference.out, category)
+        get_indels(minimap2_to_reference.out, category)
         alignment(minimap2_to_reference.out)
         mask_alignment(alignment.out)
-        get_snps(mask_alignment.out)
-        type_AAs_and_dels(mask_alignment.out, get_variants.out)
+        get_snps(mask_alignment.out, category)
+        type_AAs_and_dels(mask_alignment.out, get_variants.out, category)
     emit:
         variants = type_AAs_and_dels.out
         fasta = mask_alignment.out
@@ -208,6 +214,7 @@ reference_genbank = file(params.reference_genbank)
 
 workflow {
     uk_fasta = Channel.fromPath(params.uk_fasta)
+    category = params.category
 
-    align_and_variant_call_cog_uk(uk_fasta)
+    align_and_variant_call_cog_uk(uk_fasta, category)
 }

@@ -14,8 +14,6 @@ process filter_low_coverage_sequences {
     * @params min_covg
     */
 
-    publishDir "${publish_dev}/${params.category}", pattern: "*.csv", mode: 'copy', saveAs: {"${params.category}_master.csv"}
-
     input:
     path alignment
     path metadata
@@ -65,6 +63,30 @@ process filter_low_coverage_sequences {
 }
 
 
+process publish_master_metadata {
+    /**
+    * Keeps only sequences with completeness greater than min_covg threshold
+    * @input metadata
+    * @output metadata
+    */
+
+    publishDir "${publish_dev}", pattern: "*/*.csv", mode: 'copy'
+
+    input:
+    path metadata
+    val category
+
+    output:
+    path "${category}/${category}_master.csv"
+
+    script:
+    """
+    mkdir -p ${category}
+    cp ${metadata} ${category}/${category}_master.csv
+    """
+}
+
+
 process trim_alignment {
     /**
     * Trims start and end of alignment
@@ -104,21 +126,22 @@ process trim_alignment {
 }
 
 
-process gisaid_distance_QC {
+process distance_QC {
     /**
     * Outputs number of sequences per country
     * @input fasta, metadata
     * @output "QC_distances.tsv"
     */
-    publishDir "${publish_dev}/${params.category}", pattern: "*.csv", mode: 'copy'
+    publishDir "${publish_dev}", pattern: "*/*.tsv", mode: 'copy'
 
 
     input:
     path fasta
     path metadata
+    val category
 
     output:
-    path "QC_distances.tsv"
+    path "${category}/${category}_QC_distances.tsv"
 
     script:
     """
@@ -126,18 +149,18 @@ process gisaid_distance_QC {
         --input-fasta ${fasta} \
         --input-metadata ${metadata}
 
-    mv distances.tsv "QC_distances.tsv"
+    mkdir -p ${category}
+    mv distances.tsv "${category}/${category}_QC_distances.tsv"
     """
 }
 
 
-process gisaid_filter_on_distance_to_WH04 {
+process filter_on_distance_to_WH04 {
     /**
     * Restricts to samples within distance x of WH04
     * @input fasta, metadata, distances
-    * @output "QC_distances.tsv"
+    * @output
     */
-   publishDir "${publish_dev}/${params.category}", pattern: "*.csv", mode: 'copy', saveAs: {"${params.category}_master.csv"}
 
     input:
     path fasta
@@ -198,11 +221,12 @@ workflow filter_and_trim_gisaid {
     main:
         filter_low_coverage_sequences(gisaid_fasta, gisaid_metadata)
         trim_alignment(filter_low_coverage_sequences.out.fasta_updated)
-        gisaid_distance_QC(trim_alignment.out, filter_low_coverage_sequences.out.metadata_updated)
-        gisaid_filter_on_distance_to_WH04(gisaid_fasta, gisaid_metadata,gisaid_distance_QC.out)
+        distance_QC(trim_alignment.out, filter_low_coverage_sequences.out.metadata_updated, "gisaid")
+        filter_on_distance_to_WH04(gisaid_fasta, gisaid_metadata, distance_QC.out)
+        publish_master_metadata(filter_on_distance_to_WH04.out.metadata, "gisaid")
     emit:
-        fasta = gisaid_filter_on_distance_to_WH04.out.fasta
-        metadata = gisaid_filter_on_distance_to_WH04.out.metadata
+        fasta = filter_on_distance_to_WH04.out.fasta
+        metadata = filter_on_distance_to_WH04.out.metadata
 }
 
 
@@ -213,6 +237,7 @@ workflow filter_and_trim_cog_uk {
     main:
         filter_low_coverage_sequences(uk_fasta, uk_metadata)
         trim_alignment(filter_low_coverage_sequences.out.fasta_updated)
+        publish_master_metadata(filter_low_coverage_sequences.out.metadata_updated, "cog")
     emit:
         fasta = trim_alignment.out
         metadata = filter_low_coverage_sequences.out.metadata_updated
