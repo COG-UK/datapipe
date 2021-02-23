@@ -370,11 +370,11 @@ workflow publish_gisaid {
                     .set{ publish_input_ch }
         publish_gisaid_recipes(publish_input_ch)
         outputs_ch = publish_gisaid_recipes.out.all.collect()
-        announce_to_webhook(outputs_ch)
     emit:
         fasta = publish_gisaid_recipes.out.fasta
         metadata = publish_gisaid_recipes.out.metadata
         variants = publish_gisaid_recipes.out.variants
+        published = outputs_ch
 }
 
 

@@ -63,7 +63,7 @@ process get_indels {
     * @output insertions, deletions
     */
 
-    publishDir "${publish_dir}/metadata/", pattern: "*.csv", mode: 'copy'
+    publishDir "${publish_dev}/metadata/", pattern: "*.csv", mode: 'copy'
 
     input:
     path sam

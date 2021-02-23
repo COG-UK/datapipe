@@ -10,6 +10,7 @@ include { deduplicate_gisaid } from '../modules/deduplicate.nf'
 include { align_and_variant_call } from '../modules/align_and_variant_call.nf'
 include { filter_and_trim_gisaid } from '../modules/filter_and_trim.nf'
 include { publish_gisaid } from '../modules/publish_all.nf'
+include { announce_to_webhook } from '../modules/publish_all.nf'
 
 workflow process_gisaid {
     take:
@@ -33,5 +34,6 @@ workflow {
 
     check_for_pangolin_update()
     process_gisaid(ch_gisaid_json, check_for_pangolin_update.out)
+    announce_to_webhook(process_gisaid.out.published)
 
 }
