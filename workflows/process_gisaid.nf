@@ -34,6 +34,6 @@ workflow {
 
     check_for_pangolin_update()
     process_gisaid(ch_gisaid_json, check_for_pangolin_update.out)
-    announce_to_webhook(process_gisaid.out.published)
+    announce_to_webhook(process_gisaid.out.published, "Gisaid processing")
 
 }

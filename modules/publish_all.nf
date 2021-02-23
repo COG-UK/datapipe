@@ -299,12 +299,13 @@ process publish_gisaid_recipes {
 process announce_to_webhook {
     input:
     file published_files
+    val name
 
     script:
     if (params.webhook)
         """
         echo '{"text":"' > announce.json
-        echo "*Datapipe Complete*\\n" >> announce.json
+        echo "*${name} Complete*\\n" >> announce.json
         echo "> Dev outputs in : ${publish_dev}\\n" >> announce.json
         echo "> Publishable outputs in : ${publish_dir}\\n" >> announce.json
         echo '"}' >> announce.json
@@ -352,7 +353,7 @@ workflow publish_cog_global {
                           .set{ publish_input_ch }
         publish_cog_global_recipes(publish_input_ch)
         outputs_ch = publish_cog_global_recipes.out.collect()
-        announce_to_webhook(outputs_ch)
+        announce_to_webhook(outputs_ch, "Datapipe")
 }
 
 
