@@ -134,7 +134,7 @@ def publish_file(outdir, info_dict):
 
     cmd_list = ["fastafunk fetch --in-fasta", info_dict["in_fa"], "--in-metadata", info_dict["in_csv"],
               "--index-column sequence_name --out-fasta", info_dict["out_fa"],
-              "--out-metadata", info_dict["out_csv"], "--restrict"]
+              "--out-metadata", info_dict["out_csv"], "--restrict --low-memory"]
     if info_dict["metadata_fields"]:
             cmd_list.append("--filter-column")
             cmd_list.extend(info_dict["metadata_fields"])

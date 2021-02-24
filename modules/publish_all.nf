@@ -42,7 +42,7 @@ process combine_cog_gisaid {
           --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1\
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
-          --restrict
+          --restrict --low-memory
 
         fastafunk fetch \
           --in-fasta ${gisaid_fasta} \
@@ -60,14 +60,15 @@ process combine_cog_gisaid {
           --where-column adm1=edin_admin_1 travel_history=edin_travel \
           --out-fasta "intermediate_gisaid.fa" \
           --out-metadata "intermediate_gisaid.csv" \
-          --restrict
+          --restrict --low-memory
 
         fastafunk merge \
           --in-fasta "intermediate_cog.fa" "intermediate_gisaid.fa" \
           --in-metadata "intermediate_cog.csv" "intermediate_gisaid.csv" \
           --out-fasta "cog_gisaid.fa" \
           --out-metadata "cog_gisaid.csv" \
-          --index-column sequence_name
+          --index-column sequence_name \
+          --low-memory
     """
 }
 
