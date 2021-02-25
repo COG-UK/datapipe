@@ -14,6 +14,8 @@ process combine_cog_gisaid {
     * @output cog_gisaid_fasta, cog_gisaid_metadata
     */
 
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.fa", mode: 'copy'
+
     input:
     path uk_fasta
     path uk_metadata
@@ -80,7 +82,7 @@ process combine_variants {
     * @output cog_gisaid_fasta, cog_gisaid_metadata
     */
 
-    publishDir "${publish_dev}/COG_GISAID", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_variants.csv"}
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_variants.csv"}
 
 
     input:
@@ -183,7 +185,7 @@ process add_geography_to_metadata {
     * @output metadata
     */
 
-    publishDir "${publish_dev}/COG_GISAID", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
 
     input:
     path combined_metadata

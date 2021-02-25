@@ -142,16 +142,19 @@ process get_snps {
     * @params reference_fasta
     */
 
+    publishDir "${publish_dev}", pattern: "*/*.csv", mode: 'copy'
+
     input:
     path alignment
     val category
 
     output:
-    path "${category}.snps.csv"
+    path "${category}/${category}.snps.csv"
 
     script:
     """
-    gofasta snps -r ${reference_fasta} -q ${alignment} -o ${category}.snps.csv
+    mkdir ${category}
+    gofasta snps -r ${reference_fasta} -q ${alignment} -o ${category}/${category}.snps.csv
     """
 }
 
