@@ -64,8 +64,8 @@ def prepare_for_pangolin(in_fasta, in_metadata, previous_metadata, out_fasta, ou
                 probability = lineage_dict[fasta_header]["probability"]
             elif fasta_header in alignment:
                 seqrec = alignment[fasta_header]
-                fasta_out.write(">" + seqrec.id + "\\n")
-                fasta_out.write(str(seqrec.seq) + "\\n")
+                fasta_out.write(">" + seqrec.id + "\n")
+                fasta_out.write(str(seqrec.seq) + "\n")
 
             row["lineage"] = lineage
             row["pangoLEARN_version"] = pangoLEARN_version
