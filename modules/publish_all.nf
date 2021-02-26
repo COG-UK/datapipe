@@ -276,7 +276,7 @@ process publish_gisaid_recipes {
     * @output many
     */
 
-    publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
+    publishDir "${publish_dev}/", pattern: "*/*.*", mode: 'copy', overwrite: false
 
     input:
     tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_variants),path(recipe)
