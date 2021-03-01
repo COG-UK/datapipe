@@ -20,8 +20,8 @@ workflow process_gisaid {
       preprocess_gisaid(gisaid_json)
       pangolin(preprocess_gisaid.out.fasta, preprocess_gisaid.out.metadata, pangolin_updated)
       deduplicate_gisaid(preprocess_gisaid.out.fasta, pangolin.out.metadata)
-      align_and_variant_call(deduplicate_gisaid.out.fasta, "gisaid")
-      filter_and_trim_gisaid(align_and_variant_call.out.fasta, deduplicate_gisaid.out.metadata)
+      align_and_variant_call(deduplicate_gisaid.out.fasta, deduplicate_gisaid.out.metadata, "gisaid")
+      filter_and_trim_gisaid(align_and_variant_call.out.fasta, align_and_variant_call.out.metadata)
       publish_gisaid(filter_and_trim_gisaid.out.fasta, filter_and_trim_gisaid.out.metadata, align_and_variant_call.out.variants)
     emit:
       fasta = publish_gisaid.out.fasta

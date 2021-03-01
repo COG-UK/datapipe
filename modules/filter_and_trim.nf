@@ -65,7 +65,7 @@ process filter_low_coverage_sequences {
 
 process publish_master_metadata {
     /**
-    * Keeps only sequences with completeness greater than min_covg threshold
+    * Publishes master metadata csv for this category
     * @input metadata
     * @output metadata
     */

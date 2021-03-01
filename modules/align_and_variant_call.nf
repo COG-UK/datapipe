@@ -63,23 +63,24 @@ process get_indels {
     * @output insertions, deletions
     */
 
-    publishDir "${publish_dev}/metadata/", pattern: "*.csv", mode: 'copy'
+    publishDir "${publish_dev}/", pattern: "*/*.csv", mode: 'copy'
 
     input:
     path sam
     val category
 
     output:
-    path "${category}.insertions.csv", emit: insertions
-    path "${category}.deletions.csv", emit: deletions
+    path "${category}/${category}.insertions.csv", emit: insertions
+    path "${category}/${category}.deletions.csv", emit: deletions
 
     script:
     """
+    mkdir ${category}
     gofasta sam indels \
       -s ${sam} \
       --threshold 2 \
-      --insertions-out "${category}.insertions.csv" \
-      --deletions-out "${category}.deletions.csv"
+      --insertions-out "${category}/${category}.insertions.csv" \
+      --deletions-out "${category}/${category}.deletions.csv"
     """
 }
 
@@ -190,9 +191,90 @@ process type_AAs_and_dels {
     """
 }
 
+process get_nuc_variants {
+    /**
+    * Combines nucleotide variants into a metadata file which can be merged into the master
+    * @input snps, dels
+    * @output metadata
+    */
+
+    input:
+    path snps
+    path dels
+
+    output:
+    path "nuc_variants.csv"
+
+    script:
+    """
+    #!/usr/bin/env python3
+    import csv
+
+    sample_dict = {}
+    with open("${dels}", 'r', newline = '') as csv_in:
+        reader = csv.DictReader(csv_in, delimiter="\t", quotechar='\"', dialect = "unix")
+        for row in reader:
+            var = "del_%s_%s" %(row["ref_start"], row["length"])
+            samples = row["samples"].strip().split('|')
+            for sample in samples:
+                if sample in sample_dict:
+                    sample_dict[sample].append(var)
+                else:
+                    sample_dict[sample] = [var]
+
+    with open("${snps}", 'r', newline = '') as csv_in, \
+        open("nuc_variants.csv", 'w', newline = '') as csv_out:
+
+        reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
+        writer = csv.DictWriter(csv_out, fieldnames = ["sequence_name", "nucleotide_variants"], delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
+        writer.writeheader()
+
+        for row in reader:
+            row["sequence_name"] = row["query"]
+            row["nucleotide_variants"] = row["SNPs"]
+            if row["sequence_name"] in sample_dict:
+                all_vars = [row["nucleotide_variants"]]
+                all_vars.extend(sample_dict[row["sequence_name"]])
+                row["nucleotide_variants"] = '|'.join(all_vars)
+            for key in [k for k in row if k not in ["sequence_name", "nucleotide_variants"]]:
+                del row[key]
+            writer.writerow(row)
+    """
+}
+
+
+process add_nucleotide_variants_to_metadata {
+    /**
+    * Adds nucleotide variants to metadata
+    * @input metadata, nucleotide_variants
+    * @output metadata
+    */
+
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
+
+    input:
+    path metadata
+    path nucleotide_variants
+
+    output:
+    path "${metadata.baseName}.with_nuc_variants.csv"
+
+    script:
+    """
+    fastafunk add_columns \
+          --in-metadata ${metadata} \
+          --in-data ${nucleotide_variants} \
+          --index-column sequence_name \
+          --join-on sequence_name \
+          --new-columns nucleotide_variants \
+          --out-metadata "${metadata.baseName}.with_nuc_variants.csv"
+    """
+}
+
 workflow align_and_variant_call {
     take:
         in_fasta
+        in_metadata
         category
     main:
         minimap2_to_reference(in_fasta)
@@ -202,9 +284,12 @@ workflow align_and_variant_call {
         mask_alignment(alignment.out)
         get_snps(mask_alignment.out, category)
         type_AAs_and_dels(mask_alignment.out, get_variants.out, category)
+        get_nuc_variants(get_snps.out, get_indels.out.deletions)
+        add_nucleotide_variants_to_metadata(in_metadata, get_nuc_variants.out)
     emit:
         variants = type_AAs_and_dels.out
         fasta = mask_alignment.out
+        metadata = add_nucleotide_variants_to_metadata.out
 }
 
 

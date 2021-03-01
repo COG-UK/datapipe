@@ -21,8 +21,8 @@ workflow process_cog_uk {
       preprocess_cog_uk(uk_fasta, uk_metadata, uk_accessions)
       pangolin(preprocess_cog_uk.out.fasta, preprocess_cog_uk.out.metadata, pangolin_updated)
       deduplicate_cog_uk(preprocess_cog_uk.out.fasta, pangolin.out.metadata)
-      align_and_variant_call(deduplicate_cog_uk.out.fasta, "cog")
-      filter_and_trim_cog_uk(align_and_variant_call.out.fasta, deduplicate_cog_uk.out.metadata)
+      align_and_variant_call(deduplicate_cog_uk.out.fasta, deduplicate_cog_uk.out.metadata, "cog")
+      filter_and_trim_cog_uk(align_and_variant_call.out.fasta, align_and_variant_call.out.metadata)
     emit:
       unaligned_fasta = deduplicate_cog_uk.out.fasta
       aligned_fasta = align_and_variant_call.out.fasta

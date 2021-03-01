@@ -40,7 +40,7 @@ process combine_cog_gisaid {
                           is_travel_history travel_history \
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
-                          ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target why_excluded \
+                          ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target why_excluded nucleotide_variants \
           --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1\
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
@@ -50,7 +50,7 @@ process combine_cog_gisaid {
           --in-fasta ${gisaid_fasta} \
           --in-metadata ${gisaid_metadata} \
           --index-column sequence_name \
-          --filter-column covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
+          --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
                           pillar_2 \
                           sequence_name sample_date epi_week \
                           country adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
@@ -58,7 +58,7 @@ process combine_cog_gisaid {
                           is_travel_history travel_history \
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
-                          ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
+                          ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target why_excluded nucleotide_variants \
           --where-column adm1=edin_admin_1 travel_history=edin_travel \
           --out-fasta "intermediate_gisaid.fa" \
           --out-metadata "intermediate_gisaid.csv" \
