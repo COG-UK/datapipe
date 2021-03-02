@@ -212,8 +212,8 @@ process get_nuc_variants {
 
     sample_dict = {}
     with open("${dels}", 'r', newline = '') as csv_in:
-        for line in csv_in.strip():
-            ref_start, length, samples = line.split()
+        for line in csv_in:
+            ref_start, length, samples = line.strip().split()
             samples = samples.split('|')
             var = "del_%s_%s" %(ref_start, length)
             for sample in samples:
