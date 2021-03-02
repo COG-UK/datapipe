@@ -58,20 +58,20 @@ process get_variants {
 
 process get_indels {
     /**
-    * Creates CSV of indels found in each genome
+    * Creates TSV of indels found in each genome
     * @input sam
     * @output insertions, deletions
     */
 
-    publishDir "${publish_dev}/", pattern: "*/*.csv", mode: 'copy'
+    publishDir "${publish_dev}/", pattern: "*/*.tsv", mode: 'copy'
 
     input:
     path sam
     val category
 
     output:
-    path "${category}/${category}.insertions.csv", emit: insertions
-    path "${category}/${category}.deletions.csv", emit: deletions
+    path "${category}/${category}.insertions.tsv", emit: insertions
+    path "${category}/${category}.deletions.tsv", emit: deletions
 
     script:
     """
@@ -79,8 +79,8 @@ process get_indels {
     gofasta sam indels \
       -s ${sam} \
       --threshold 2 \
-      --insertions-out "${category}/${category}.insertions.csv" \
-      --deletions-out "${category}/${category}.deletions.csv"
+      --insertions-out "${category}/${category}.insertions.tsv" \
+      --deletions-out "${category}/${category}.deletions.tsv"
     """
 }
 
@@ -212,10 +212,10 @@ process get_nuc_variants {
 
     sample_dict = {}
     with open("${dels}", 'r', newline = '') as csv_in:
-        reader = csv.DictReader(csv_in, delimiter="\t", quotechar='\"', dialect = "unix")
-        for row in reader:
-            var = "del_%s_%s" %(row["ref_start"], row["length"])
-            samples = row["samples"].strip().split('|')
+        for line in csv_in.strip():
+            ref_start, length, samples = line.split()
+            samples = samples.split('|')
+            var = "del_%s_%s" %(ref_start, length)
             for sample in samples:
                 if sample in sample_dict:
                     sample_dict[sample].append(var)
