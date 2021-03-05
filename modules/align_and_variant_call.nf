@@ -75,7 +75,7 @@ process get_indels {
 
     script:
     """
-    mkdir ${category}
+    mkdir -p ${category}
     gofasta sam indels \
       -s ${sam} \
       --threshold 2 \
@@ -154,7 +154,7 @@ process get_snps {
 
     script:
     """
-    mkdir ${category}
+    mkdir -p ${category}
     gofasta snps -r ${reference_fasta} -q ${alignment} -o ${category}/${category}.snps.csv
     """
 }
