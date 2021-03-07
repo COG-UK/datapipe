@@ -34,7 +34,7 @@ def prepare_for_pangolin(in_fasta, in_metadata, previous_metadata, out_fasta, ou
 
         for row in reader:
             if row[taxon] in lineage_dict:
-                print("%s occurs more than once in lineages input file" % row["taxon"])
+                print("%s occurs more than once in lineages input file" % row[taxon])
                 continue
             lineage_dict[row[taxon]] = {"lineage": row[lin], "pangoLEARN_version": row[pango_version], "probability": row[prob]}
 
