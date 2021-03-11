@@ -38,7 +38,9 @@ process combine_cog_gisaid {
                           is_travel_history travel_history \
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
-                          ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target why_excluded \
+                          ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
+                          duplicate why_excluded \
+                          uk_lineage microreact_lineage del_lineage del_introduction phylotype \
           --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1\
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
@@ -57,6 +59,8 @@ process combine_cog_gisaid {
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
+                          duplicate why_excluded \
+                          uk_lineage microreact_lineage del_lineage del_introduction phylotype \
           --where-column adm1=edin_admin_1 travel_history=edin_travel \
           --out-fasta "intermediate_gisaid.fa" \
           --out-metadata "intermediate_gisaid.csv" \
