@@ -14,6 +14,8 @@ process combine_cog_gisaid {
     * @output cog_gisaid_fasta, cog_gisaid_metadata
     */
 
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.fa", mode: 'copy'
+
     input:
     path uk_fasta
     path uk_metadata
@@ -39,18 +41,18 @@ process combine_cog_gisaid {
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
-                          duplicate why_excluded \
+                          duplicate why_excluded nucleotide_variants\
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
           --where-column epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1\
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
-          --restrict
+          --restrict --low-memory
 
         fastafunk fetch \
           --in-fasta ${gisaid_fasta} \
           --in-metadata ${gisaid_metadata} \
           --index-column sequence_name \
-          --filter-column covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
+          --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
                           pillar_2 \
                           sequence_name sample_date epi_week \
                           country adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
@@ -59,19 +61,20 @@ process combine_cog_gisaid {
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
-                          duplicate why_excluded \
+                          duplicate why_excluded nucleotide_variants\
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
           --where-column adm1=edin_admin_1 travel_history=edin_travel \
           --out-fasta "intermediate_gisaid.fa" \
           --out-metadata "intermediate_gisaid.csv" \
-          --restrict
+          --restrict --low-memory
 
         fastafunk merge \
           --in-fasta "intermediate_cog.fa" "intermediate_gisaid.fa" \
           --in-metadata "intermediate_cog.csv" "intermediate_gisaid.csv" \
           --out-fasta "cog_gisaid.fa" \
           --out-metadata "cog_gisaid.csv" \
-          --index-column sequence_name
+          --index-column sequence_name \
+          --low-memory
     """
 }
 
@@ -83,7 +86,7 @@ process combine_variants {
     * @output cog_gisaid_fasta, cog_gisaid_metadata
     */
 
-    publishDir "${publish_dev}/COG_GISAID", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_variants.csv"}
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_variants.csv"}
 
 
     input:
@@ -107,24 +110,24 @@ process combine_variants {
     with open("${uk_variants}", "r") as COG_variants_in, \
          open("${gisaid_variants}", "r") as GISAID_variants_in, \
          open("cog_gisaid_variants.csv", "w") as variants_out:
-        for line in GISAID_variants_in:
-            if first:
-                variants_out.write(line)
-                first = False
-                continue
-
-            sample = line.strip().split(",")[0]
-            if sample in GISAID_fasta:
-                variants_out.write(line)
-
-        first = True
         for line in COG_variants_in:
             if first:
+                variants_out.write(line)
                 first = False
                 continue
 
             sample = line.strip().split(",")[0]
             if sample in COG_fasta:
+                variants_out.write(line)
+
+        first = True
+        for line in GISAID_variants_in:
+            if first:
+                first = False
+                continue
+
+            sample = line.strip().split(",")[0]
+            if sample in GISAID_fasta:
                 variants_out.write(line)
     """
 }
@@ -186,7 +189,7 @@ process add_geography_to_metadata {
     * @output metadata
     */
 
-    publishDir "${publish_dev}/COG_GISAID", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
 
     input:
     path combined_metadata
@@ -209,6 +212,9 @@ process add_geography_to_metadata {
 
 
 process split_recipes {
+    input:
+    path recipes
+
     output:
     path "*.json"
 
@@ -231,7 +237,7 @@ process split_recipes {
 }
 
 
-process publish_recipes {
+process publish_cog_global_recipes {
     /**
     * Publishes subsets of combined FASTA and METADATA for COG-UK and GISAID
     * @input uk_unaligned_fasta, uk_aligned_fasta, uk_trimmed_fasta, combined_fasta,
@@ -265,15 +271,48 @@ process publish_recipes {
 }
 
 
+process publish_gisaid_recipes {
+    /**
+    * Publishes subsets of combined FASTA and METADATA for COG-UK and GISAID
+    * @input gisaid_unaligned_fasta, gisaid_aligned_fasta, gisaid_trimmed_fasta, combined_fasta,
+    * gisaid_metadata, combined_metadata, gisaid_variants, combined_variants
+    * @params publish_recipes.json
+    * @output many
+    */
+
+    publishDir "${publish_dev}/", pattern: "*/*.*", mode: 'copy', overwrite: false
+
+    input:
+    tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_variants),path(recipe)
+
+    output:
+    path "*/gisaid_*.*", emit: all
+    path "*/gisaid_*_global_alignment.fa", optional: true, emit: fasta
+    path "*/gisaid_*_global_metadata.csv", optional: true, emit: metadata
+    path "*/gisaid_*_global_variants.csv", optional: true, emit: variants
+
+    script:
+    """
+    $project_dir/../bin/publish_from_config.py \
+      --recipes ${recipe} \
+      --date ${params.date} \
+      --gisaid_fasta ${gisaid_fasta} \
+      --gisaid_metadata ${gisaid_metadata} \
+      --gisaid_variants ${gisaid_variants}
+    """
+}
+
+
 process announce_to_webhook {
     input:
     file published_files
+    val name
 
     script:
     if (params.webhook)
         """
         echo '{"text":"' > announce.json
-        echo "*Datapipe Complete*\\n" >> announce.json
+        echo "*${name} Complete*\\n" >> announce.json
         echo "> Dev outputs in : ${publish_dev}\\n" >> announce.json
         echo "> Publishable outputs in : ${publish_dir}\\n" >> announce.json
         echo '"}' >> announce.json
@@ -289,9 +328,11 @@ process announce_to_webhook {
 
 
 geography_utils = file(params.uk_geography)
-recipes = file(params.publish_recipes)
+cog_global_recipes = file(params.publish_cog_global_recipes)
+gisaid_recipes = file(params.publish_gisaid_recipes)
 
-workflow publish_all {
+
+workflow publish_cog_global {
     take:
         uk_unaligned_fasta
         uk_aligned_fasta
@@ -306,7 +347,7 @@ workflow publish_all {
         combine_variants(uk_fasta, uk_variants, gisaid_fasta, gisaid_variants)
         uk_geography(uk_fasta, uk_metadata)
         add_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
-        split_recipes()
+        split_recipes(cog_global_recipes)
         recipe_ch = split_recipes.out.flatten()
         uk_unaligned_fasta.combine(uk_aligned_fasta)
                           .combine(uk_fasta)
@@ -317,9 +358,31 @@ workflow publish_all {
                           .combine(combine_variants.out)
                           .combine(recipe_ch)
                           .set{ publish_input_ch }
-        publish_recipes(publish_input_ch)
-        outputs_ch = publish_recipes.out.collect()
-        announce_to_webhook(outputs_ch)
+        publish_cog_global_recipes(publish_input_ch)
+        outputs_ch = publish_cog_global_recipes.out.collect()
+        announce_to_webhook(outputs_ch, "Datapipe")
+}
+
+
+workflow publish_gisaid {
+    take:
+        gisaid_fasta
+        gisaid_metadata
+        gisaid_variants
+    main:
+        split_recipes(gisaid_recipes)
+        recipe_ch = split_recipes.out.flatten()
+        gisaid_fasta.combine(gisaid_metadata)
+                    .combine(gisaid_variants)
+                    .combine(recipe_ch)
+                    .set{ publish_input_ch }
+        publish_gisaid_recipes(publish_input_ch)
+        outputs_ch = publish_gisaid_recipes.out.all.collect()
+    emit:
+        fasta = publish_gisaid_recipes.out.fasta
+        metadata = publish_gisaid_recipes.out.metadata
+        variants = publish_gisaid_recipes.out.variants
+        published = outputs_ch
 }
 
 
