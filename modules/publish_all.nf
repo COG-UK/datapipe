@@ -274,7 +274,6 @@ process publish_cog_global_recipes {
     """
 }
 
-
 process publish_s3 {
     /**
     * Publishes public files to s3
@@ -282,10 +281,10 @@ process publish_s3 {
     */
 
     input:
-    fasta
-    metadata
-    alignment
-    unmasked_alignment
+    path fasta
+    path metadata
+    path alignment
+    path unmasked_alignment
 
     script:
     """
