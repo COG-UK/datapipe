@@ -252,7 +252,11 @@ process publish_cog_global_recipes {
     tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(uk_variants),path(combined_variants),path(recipe)
 
     output:
-    path "*/cog_*.*"
+    path "*/cog_*.*", emit: all
+    path "public/cog_*_all.fa", optional: true, emit: fasta
+    path "public/cog_*_metadata.csv", optional: true, emit: metadata
+    path "public/cog_*_alignment.fa", optional: true, emit: alignment
+    path "public/cog_*_unmasked_alignment.fa", optional: true, emit: unmasked_alignment
 
     script:
     """
@@ -267,6 +271,32 @@ process publish_cog_global_recipes {
       --cog_global_variants ${combined_variants} \
       --recipes ${recipe} \
       --date ${params.date}
+    """
+}
+
+
+process publish_s3 {
+    /**
+    * Publishes public files to s3
+    * @input fasta, metadata, aligment, unmasked_alignment
+    */
+
+    input:
+    fasta
+    metadata
+    alignment
+    unmasked_alignment
+
+    script:
+    """
+    mkdir -p s3dir
+    cp ${fasta} s3dir/cog_all.fasta
+    cp ${metadata} s3dir/cog_metadata.csv
+    cp ${alignment} s3dir/cog_alignment.fasta
+    cp ${unmasked_alignment} s3dir/cog_unmasked_alignment.fasta
+
+    s3cmd sync s3dir/ s3://cog-uk/phylogenetics/{params.date}/ --acl-public
+    s3cmd sync s3dir/ s3://cog-uk/phylogenetics/latest/ --acl-public
     """
 }
 
@@ -359,8 +389,9 @@ workflow publish_cog_global {
                           .combine(recipe_ch)
                           .set{ publish_input_ch }
         publish_cog_global_recipes(publish_input_ch)
-        outputs_ch = publish_cog_global_recipes.out.collect()
+        outputs_ch = publish_cog_global_recipes.out.all.collect()
         announce_to_webhook(outputs_ch, "Datapipe")
+        publish_s3(publish_cog_global_recipes.out.fasta, publish_cog_global_recipes.out.metadata, publish_cog_global_recipes.out.alignment, publish_cog_global_recipes.out.unmasked_alignment)
 }
 
 

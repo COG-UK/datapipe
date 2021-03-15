@@ -44,5 +44,24 @@
       "metadata_fields": ["sequence_name", "sample_date", "lineage","lineages_version"],
       "mutations": true
     }
+  ],
+  "public": [
+    {
+      "suffix": "all",
+      "data": "cog",
+      "fasta": "unaligned"
+    },
+    {
+      "data": "cog",
+      "fasta": "trimmed",
+      "metadata_fields": ["sequence_name", "country","adm1","pillar_2","sample_date", "epi_week","lineage","lineage_support","lineages_version"],
+      "mutations": true,
+      "where": "epi_week=edin_epi_week country=adm0"
+    },
+    {
+      "suffix": "unmasked_alignment",
+      "data": "cog",
+      "fasta": "aligned"
+    }
   ]
 }
