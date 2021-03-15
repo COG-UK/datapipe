@@ -27,6 +27,8 @@ def prepare_for_pangolin(in_fasta, in_metadata, previous_metadata, out_fasta, ou
             taxon = "fasta_header"
         elif "edin_header" in reader.fieldnames:
             taxon = "edin_header"
+        elif "sequence_name" in reader.fieldnames:
+            taxon = "sequence_name"
         if "lineages_version" in reader.fieldnames:
             pango_version = "lineages_version"
         if "lineage_support" in reader.fieldnames:
