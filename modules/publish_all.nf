@@ -253,10 +253,10 @@ process publish_cog_global_recipes {
 
     output:
     path "*/cog_*.*", emit: all
-    path "public/cog_*_all.fa", optional: true, emit: fasta
-    path "public/cog_*_metadata.csv", optional: true, emit: metadata
-    path "public/cog_*_alignment.fa", optional: true, emit: alignment
-    path "public/cog_*_unmasked_alignment.fa", optional: true, emit: unmasked_alignment
+    //path "public/cog_*_all.fa", optional: true, emit: fasta
+    //path "public/cog_*_metadata.csv", optional: true, emit: metadata
+    //path "public/cog_*_alignment.fa", optional: true, emit: alignment
+    //path "public/cog_*_unmasked_alignment.fa", optional: true, emit: unmasked_alignment
 
     script:
     """
@@ -315,10 +315,10 @@ process publish_gisaid_recipes {
     tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_variants),path(recipe)
 
     output:
-    path "*/gisaid_*.*" //, emit: all
-    //path "*/gisaid_*_global_alignment.fa", optional: true, emit: fasta
-    //path "*/gisaid_*_global_metadata.csv", optional: true, emit: metadata
-    //path "*/gisaid_*_global_variants.csv", optional: true, emit: variants
+    path "*/gisaid_*.*", emit: all
+    path "*/gisaid_*_global_alignment.fa", optional: true, emit: fasta
+    path "*/gisaid_*_global_metadata.csv", optional: true, emit: metadata
+    path "*/gisaid_*_global_variants.csv", optional: true, emit: variants
 
     script:
     """
@@ -388,7 +388,7 @@ workflow publish_cog_global {
                           .combine(recipe_ch)
                           .set{ publish_input_ch }
         publish_cog_global_recipes(publish_input_ch)
-        outputs_ch = publish_cog_global_recipes.out.collect()
+        outputs_ch = publish_cog_global_recipes.out.all.collect()
         announce_to_webhook(outputs_ch, "Datapipe")
         //publish_s3(publish_cog_global_recipes.out.fasta, publish_cog_global_recipes.out.metadata, publish_cog_global_recipes.out.alignment, publish_cog_global_recipes.out.unmasked_alignment)
 }
