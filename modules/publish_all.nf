@@ -252,7 +252,8 @@ process publish_cog_global_recipes {
     tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(uk_variants),path(combined_variants),path(recipe)
 
     output:
-    path "${recipe.baseName}.done.txt", emit: all
+    path "*/cog_*.*", emit: all
+    path "${recipe.baseName}.done.txt", emit: flag
     path "public/cog_*_all.fa", optional: true, emit: fasta
     path "public/cog_*_metadata.csv", optional: true, emit: metadata
     path "public/cog_*_alignment.fa", optional: true, emit: alignment
@@ -389,7 +390,7 @@ workflow publish_cog_global {
                           .combine(recipe_ch)
                           .set{ publish_input_ch }
         publish_cog_global_recipes(publish_input_ch)
-        outputs_ch = publish_cog_global_recipes.out.all.collect()
+        outputs_ch = publish_cog_global_recipes.out.flag.collect()
         announce_to_webhook(outputs_ch, "Datapipe")
         publish_s3(publish_cog_global_recipes.out.fasta, publish_cog_global_recipes.out.metadata, publish_cog_global_recipes.out.alignment, publish_cog_global_recipes.out.unmasked_alignment)
 }
