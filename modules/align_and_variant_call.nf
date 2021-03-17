@@ -64,6 +64,7 @@ process get_indels {
     */
 
     publishDir "${publish_dev}/", pattern: "*/*.tsv", mode: 'copy'
+    publishDir "${publish_dir}/", pattern: "*/*.tsv", mode: 'copy', enabled: { ${category} == 'cog'}
 
     input:
     path sam
@@ -302,7 +303,8 @@ reference_genbank = file(params.reference_genbank)
 
 workflow {
     uk_fasta = Channel.fromPath(params.uk_fasta)
+    uk_metadata = Channel.fromPath(params.uk_metadata)
     category = params.category
 
-    align_and_variant_call_cog_uk(uk_fasta, category)
+    align_and_variant_call(uk_fasta, uk_metadata, category)
 }

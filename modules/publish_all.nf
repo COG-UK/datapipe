@@ -252,7 +252,7 @@ process publish_cog_global_recipes {
     tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(uk_variants),path(combined_variants),path(recipe)
 
     output:
-    path "*/cog_*.*", emit: all
+    path "${recipe.baseName}.done.txt", emit: all
     path "public/cog_*_all.fa", optional: true, emit: fasta
     path "public/cog_*_metadata.csv", optional: true, emit: metadata
     path "public/cog_*_alignment.fa", optional: true, emit: alignment
@@ -271,6 +271,7 @@ process publish_cog_global_recipes {
       --cog_global_variants ${combined_variants} \
       --recipes ${recipe} \
       --date ${params.date}
+      touch "${recipe.baseName}.done.txt"
     """
 }
 
