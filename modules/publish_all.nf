@@ -168,7 +168,7 @@ process uk_geography {
       --out-metadata geography_tmp/fetch.csv \
       --restrict
 
-    $project_dir/../bin/geography_cleaning.py \
+    $project_dir/../bin/geography_cleaning/geography_cleaning.py \
       --metadata geography_tmp/fetch.csv \
       --country-col adm0 \
       --adm1-col adm1 \
@@ -247,20 +247,24 @@ process publish_cog_global_recipes {
     */
 
     publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
+    publishDir "${publish_dir}/", pattern: "README", mode: 'copy', overwrite: false
 
     input:
     tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(uk_variants),path(combined_variants),path(recipe)
 
     output:
-    path "*/cog_*.*", emit: all
     path "${recipe.baseName}.done.txt", emit: flag
+    path "README", emit: readme
     path "public/cog_*_all.fa", optional: true, emit: fasta
     path "public/cog_*_metadata.csv", optional: true, emit: metadata
     path "public/cog_*_alignment.fa", optional: true, emit: alignment
     path "public/cog_*_unmasked_alignment.fa", optional: true, emit: unmasked_alignment
+    path "*/cog_*.*", emit: all
 
     script:
     """
+    cp $project_dir/../publish_readme.txt README
+
     $project_dir/../bin/publish_from_config.py \
       --unaligned_fasta ${uk_unaligned_fasta} \
       --aligned_fasta ${uk_aligned_fasta} \

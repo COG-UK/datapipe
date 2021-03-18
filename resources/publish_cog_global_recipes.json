@@ -59,7 +59,7 @@
       "where": "epi_week=edin_epi_week country=adm0"
     },
     {
-      "suffix": "unmasked_alignment",
+      "suffix": "unmasked",
       "data": "cog",
       "fasta": "aligned"
     }
