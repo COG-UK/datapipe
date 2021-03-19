@@ -5,9 +5,9 @@ nextflow.enable.dsl = 2
 project_dir = projectDir
 
 
-process uk_strip_header_digits {
+process uk_strip_header_digits_and_unalign {
     /**
-    * Strips extra header info from FASTA
+    * Strips extra header info from FASTA, removed '-' from sequence
     * @input uk_fasta
     * @output uk_fasta_updated
     */
@@ -28,7 +28,8 @@ process uk_strip_header_digits {
         for record in fasta_in:
             ID = record.description.split("|")[0]
             f.write(">" + ID + "\\n")
-            f.write(str(record.seq) + "\\n")
+            seq = str(record.seq).replace('-','')
+            f.write(seq + "\\n")
     """
 }
 
