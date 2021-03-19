@@ -43,6 +43,13 @@
       "data": "cog_global",
       "metadata_fields": ["sequence_name", "sample_date", "lineage","lineages_version"],
       "mutations": true
+    },
+    {
+      "suffix": "unlinked",
+      "data": "cog",
+      "metadata_fields": ["sample_date","epi_week", "location","lineage","lineages_version","is_surveillance", "pillar"],
+      "mutations": true,
+      "shuffle": true
     }
   ],
   "public": [

@@ -3,7 +3,7 @@
 ### Alignments
 
 - `cog_<date>_all.fa` : all unaligned sequences after deduplication
-- `cog_<date>_all_alignment.fa` : all aligned sequences with known ambiguous site masked
+- `cog_<date>_all_alignment.fa` : all aligned sequences after deduplication
 - `cog_<date>_all_metadata.csv` : all corresponding metadata
 - `cog_<date>_alignment.fa` : filtered, trimmed alignment with sequences matching those in the corresponding metadata
 - `cog_<date>_metadata.csv` : corresponding metadata for filtered, trimmed alignment
@@ -23,7 +23,7 @@
 
 - `cog_<date>_all.fa` : all unaligned sequences after deduplication
 - `cog_<date>_unmasked_alignment.fa` : all aligned sequences
-- `cog_<date>_alignment.fa` : filtered, trimmed and masked alignment with sequences matching those in the corresponding metadata
+- `cog_<date>_alignment.fa` : filtered, trimmed alignment with sequences matching those in the corresponding metadata
 - `cog_<date>_metadata.csv` : corresponding metadata for filtered, trimmed alignment with the following columns `"sequence_name", "country","adm1","pillar_2","sample_date", "epi_week","lineage","lineage_support","lineages_version"`
 
 

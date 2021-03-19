@@ -36,15 +36,16 @@ def parse_args():
 #"fasta": "unaligned", "aligned", "trimmed", "cog_global" or "gisaid"
 #"metadata_fields": []
 #"mutations": True or False to add columns from mutations
+#"shuffle": True to shuffle rows of metadata
 #"where": free text to be passed to fastafunk fetch --where-column
 #"suffix": something to append to file names
 #"exclude_uk": True or False to exclude samples from UK
 
 def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_dict):
     info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None,
-                 "where": None, "mutations":False, "exclude_uk":False, "date": date,
+                 "where": None, "mutations":False, "shuffle": False, "exclude_uk":False, "date": date,
                  "in_fa":None, "in_csv":None, "in_var":None,
-                 "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":None}
+                 "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":"tmp.muts.csv"}
     info_dict.update(config_dict)
 
     if info_dict["fasta"] in fasta_dict.keys():
@@ -96,9 +97,9 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
 
     if info_dict["out_fa"] != "tmp.fa" and info_dict["in_fa"] is None:
         sys.exit("Please provide the appropriate FASTA file")
-    if (info_dict["out_csv"] != "tmp.csv" or info_dict["out_var"] is not None) and info_dict["in_csv"] is None:
+    if info_dict["metadata_fields"] is not None and info_dict["in_csv"] is None:
         sys.exit("Please provide the appropriate CSV file")
-    if info_dict["out_var"] is not None and info_dict["in_var"] is None:
+    if info_dict["mutations"] is not None and info_dict["in_var"] is None:
         sys.exit("Please provide the appropriate mutations file")
     print(info_dict)
     return info_dict
@@ -126,11 +127,16 @@ def publish_file(outdir, info_dict):
         return
 
     if info_dict["exclude_uk"]:
-        cmd_list = ["head -n1", info_dict["in_csv"], "> no_uk.csv"]
+        cmd_list = ["head -n1", info_dict["in_csv"], "> tmp.no_uk.csv"]
         syscall(cmd_list)
-        cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -v -E \"^England|^Northern_Ireland|^Wales|^Scotland\"", ">> no_uk.csv"]
+        cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -v -E \"^England|^Northern_Ireland|^Wales|^Scotland\"", ">> tmp.no_uk.csv"]
         syscall(cmd_list)
-        info_dict["in_csv"] = "no_uk.csv"
+        info_dict["in_csv"] = "tmp.no_uk.csv"
+
+    if info_dict["shuffle"]:
+        cmd_list = ["fastafunk shuffle --in-metadata", info_dict["in_csv"], "--out-metadata", "tmp.shuffled.csv"]
+        syscall(cmd_list)
+        info_dict["in_csv"] = "tmp.shuffled.csv"
 
     cmd_list = ["fastafunk fetch --in-fasta", info_dict["in_fa"], "--in-metadata", info_dict["in_csv"],
               "--index-column sequence_name --out-fasta", info_dict["out_fa"],
