@@ -54,7 +54,7 @@ def add_source_id(row):
         row["source_id"] = row["root_biosample_source_id"]
 
 def add_pillar_2(row):
-    if row['collection_pillar'] == 2 or row['central_sample_id'][0:4] in ["ALDP", "CAMC", "MILK", "QEUH"]:
+    if row['collection_pillar'] == 2 or row['central_sample_id'][0:4] in ["ALDP", "CAMC", "MILK", "QEUH","RAND"]:
         row["pillar_2"] = True
     else:
         row["pillar_2"] = False
