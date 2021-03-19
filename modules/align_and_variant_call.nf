@@ -112,30 +112,6 @@ process alignment {
 }
 
 
-process mask_alignment {
-    /**
-    * Applies a mask to aligned FASTA
-    * @input alignment
-    * @output alignment_updated
-    * @params mask_file
-    */
-
-    input:
-    path alignment
-
-    output:
-    path "${alignment.baseName}.masked.fa"
-
-    script:
-    """
-    $project_dir/../bin/add_mask.py \
-      --in-alignment ${alignment} \
-      --out-alignment "${alignment.baseName}.masked.fa" \
-      --mask ${mask_file} \
-    """
-}
-
-
 process get_snps {
     /**
     * Call SNPs in each genome
@@ -282,14 +258,13 @@ workflow align_and_variant_call {
         get_variants(minimap2_to_reference.out, category)
         get_indels(minimap2_to_reference.out, category)
         alignment(minimap2_to_reference.out)
-        mask_alignment(alignment.out)
         get_snps(mask_alignment.out, category)
         type_AAs_and_dels(mask_alignment.out, get_variants.out, category)
         get_nuc_variants(get_snps.out, get_indels.out.deletions)
         add_nucleotide_variants_to_metadata(in_metadata, get_nuc_variants.out)
     emit:
         variants = type_AAs_and_dels.out
-        fasta = mask_alignment.out
+        fasta = alignment.out
         metadata = add_nucleotide_variants_to_metadata.out
 }
 
