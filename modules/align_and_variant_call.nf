@@ -258,8 +258,8 @@ workflow align_and_variant_call {
         get_variants(minimap2_to_reference.out, category)
         get_indels(minimap2_to_reference.out, category)
         alignment(minimap2_to_reference.out)
-        get_snps(mask_alignment.out, category)
-        type_AAs_and_dels(mask_alignment.out, get_variants.out, category)
+        get_snps(alignment.out, category)
+        type_AAs_and_dels(alignment.out, get_variants.out, category)
         get_nuc_variants(get_snps.out, get_indels.out.deletions)
         add_nucleotide_variants_to_metadata(in_metadata, get_nuc_variants.out)
     emit:
@@ -269,7 +269,6 @@ workflow align_and_variant_call {
 }
 
 
-mask_file = file(params.mask_file)
 aas = file(params.aas)
 dels = file(params.dels)
 reference_fasta = file(params.reference_fasta)

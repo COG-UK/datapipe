@@ -255,15 +255,15 @@ process publish_cog_global_recipes {
     output:
     path "${recipe.baseName}.done.txt", emit: flag
     path "README", emit: readme
-    path "public/cog_*_all.fa", optional: true, emit: fasta
-    path "public/cog_*_metadata.csv", optional: true, emit: metadata
-    path "public/cog_*_alignment.fa", optional: true, emit: alignment
-    path "public/cog_*_unmasked_alignment.fa", optional: true, emit: unmasked_alignment
+    path "public/cog_${params.date}_all.fa", optional: true, emit: fasta
+    path "public/cog_${params.date}_metadata.csv", optional: true, emit: metadata
+    path "public/cog_${params.date}_alignment.fa", optional: true, emit: alignment
+    path "public/cog_${params.date}_unmasked_alignment.fa", optional: true, emit: unmasked_alignment
     path "*/cog_*.*", emit: all
 
     script:
     """
-    cp $project_dir/../publish_readme.txt README
+    cp $project_dir/../resources/publish_readme.txt README
 
     $project_dir/../bin/publish_from_config.py \
       --unaligned_fasta ${uk_unaligned_fasta} \
@@ -300,7 +300,7 @@ process publish_s3 {
     cp ${alignment} s3dir/cog_alignment.fasta
     cp ${unmasked_alignment} s3dir/cog_unmasked_alignment.fasta
 
-    s3cmd sync s3dir/ s3://cog-uk/phylogenetics/{params.date}/ --acl-public
+    s3cmd sync s3dir/ s3://cog-uk/phylogenetics/${params.date}/ --acl-public
     s3cmd sync s3dir/ s3://cog-uk/phylogenetics/latest/ --acl-public
     """
 }
