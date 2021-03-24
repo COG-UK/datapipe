@@ -190,9 +190,9 @@ workflow preprocess_cog_uk {
         uk_metadata
         uk_accessions
     main:
-        uk_strip_header_digits(uk_fasta)
+        uk_strip_header_digits_and_unalign(uk_fasta)
         uk_add_columns_to_metadata(uk_metadata, uk_accessions, uk_updated_dates)
-        uk_filter_omitted_sequences(uk_strip_header_digits.out, uk_add_columns_to_metadata.out, uk_omissions)
+        uk_filter_omitted_sequences(uk_strip_header_digits_and_unalign.out, uk_add_columns_to_metadata.out, uk_omissions)
         uk_filter_on_sample_date(uk_filter_omitted_sequences.out.fasta, uk_filter_omitted_sequences.out.metadata)
     emit:
         fasta = uk_filter_on_sample_date.out.fasta
