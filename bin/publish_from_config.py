@@ -40,12 +40,13 @@ def parse_args():
 #"where": free text to be passed to fastafunk fetch --where-column
 #"suffix": something to append to file names
 #"exclude_uk": True or False to exclude samples from UK
+#"drop_index": name of index column that should be dropped at the end
 
 def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_dict):
     info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None,
                  "where": None, "mutations":False, "shuffle": False, "exclude_uk":False, "date": date,
                  "in_fa":None, "in_csv":None, "in_var":None,
-                 "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":"tmp.muts.csv"}
+                 "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":"tmp.muts.csv", "out_anon": None}
     info_dict.update(config_dict)
 
     if info_dict["fasta"] in fasta_dict.keys():
@@ -90,7 +91,9 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
         else:
             info_dict["out_fa"] = "%s.fa" %start
 
-    if info_dict["mutations"]:
+    if info_dict["drop_index"]:
+        info_dict["out_anon"] = "%s%s" %(start, csv_end)
+    elif info_dict["mutations"]:
         info_dict["out_var"] = "%s%s" %(start, csv_end)
     else:
         info_dict["out_csv"] = "%s%s" %(start, csv_end)
@@ -152,6 +155,13 @@ def publish_file(outdir, info_dict):
         cmd_list = ["fastafunk add_columns --in-metadata", info_dict["out_csv"],
         "--in-data", info_dict["in_var"], "--index-column sequence_name",
         "--join-on query --out-metadata", info_dict["out_var"]]
+        info_dict["out_csv"] = info_dict["out_var"]
+        syscall(cmd_list)
+
+    if info_dict["drop_index"]:
+        cmd_list = ["fastafunk drop_columns --in-metadata", info_dict["out_csv"],
+        "--drop_columns", info_dict["drop_index"],
+        "--out-metadata", info_dict["out_anon"]]
         syscall(cmd_list)
 
     #tmp = glob.glob("tmp.*")
