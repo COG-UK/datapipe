@@ -46,9 +46,10 @@
     },
     {
       "suffix": "unlinked",
-      "data": "cog",
-      "metadata_fields": ["sequence_name","sample_date","epi_week", "location","lineage","lineages_version","is_surveillance", "collection_pillar", "pillar_2"],
+      "data": "cog_global",
+      "metadata_fields": ["sequence_name","sample_date","epi_week", "safe_location","lineage","lineages_version","is_surveillance", "collection_pillar", "pillar_2"],
       "mutations": true,
+      "uk_only": true,
       "shuffle": true,
       "drop_index": "sequence_name"
     }

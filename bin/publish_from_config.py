@@ -40,6 +40,7 @@ def parse_args():
 #"where": free text to be passed to fastafunk fetch --where-column
 #"suffix": something to append to file names
 #"exclude_uk": True or False to exclude samples from UK
+#"uk_only": True or False to include only samples from UK from cog_global metadata
 #"drop_index": name of index column that should be dropped at the end
 
 def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_dict):
@@ -135,6 +136,13 @@ def publish_file(outdir, info_dict):
         cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -v -E \"^England|^Northern_Ireland|^Wales|^Scotland\"", ">> tmp.no_uk.csv"]
         syscall(cmd_list)
         info_dict["in_csv"] = "tmp.no_uk.csv"
+
+    if info_dict["uk_only"]:
+            cmd_list = ["head -n1", info_dict["in_csv"], "> tmp.uk_only.csv"]
+            syscall(cmd_list)
+            cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -E \"^England|^Northern_Ireland|^Wales|^Scotland\"", ">> tmp.uk_only.csv"]
+            syscall(cmd_list)
+            info_dict["in_csv"] = "tmp.uk_only.csv"
 
     if info_dict["shuffle"]:
         cmd_list = ["fastafunk shuffle --in-metadata", info_dict["in_csv"], "--out-metadata", "tmp.shuffled.csv"]

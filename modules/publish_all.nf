@@ -175,6 +175,7 @@ process uk_geography {
       --adm2-col adm2 \
       --outer-postcode-col adm2_private \
       --mapping-utils-dir ${geography_utils} \
+      --epiweek-col epi_week \
       --outdir geography
 
     rm -rf geography_tmp
