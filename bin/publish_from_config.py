@@ -134,14 +134,14 @@ def publish_file(outdir, info_dict):
     if info_dict["exclude_uk"]:
         cmd_list = ["head -n1", info_dict["in_csv"], "> tmp.no_uk.csv"]
         syscall(cmd_list)
-        cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -v -E \"^England|^Northern_Ireland|^Wales|^Scotland\"", ">> tmp.no_uk.csv"]
+        cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -v -E \"England|Northern_Ireland|Wales|Scotland\"", ">> tmp.no_uk.csv"]
         syscall(cmd_list)
         info_dict["in_csv"] = "tmp.no_uk.csv"
 
     if info_dict["uk_only"]:
             cmd_list = ["head -n1", info_dict["in_csv"], "> tmp.uk_only.csv"]
             syscall(cmd_list)
-            cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -E \"^England|^Northern_Ireland|^Wales|^Scotland\"", ">> tmp.uk_only.csv"]
+            cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -E \"England|Northern_Ireland|Wales|Scotland\"", ">> tmp.uk_only.csv"]
             syscall(cmd_list)
             info_dict["in_csv"] = "tmp.uk_only.csv"
 
