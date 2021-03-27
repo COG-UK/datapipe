@@ -46,7 +46,7 @@ def parse_args():
 def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_dict):
     info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None,
                  "where": None, "mutations":False, "shuffle": False, "drop_index": None,
-                 "exclude_uk":False, "uk_only": False, date": date,
+                 "exclude_uk":False, "uk_only": False, "date": date,
                  "in_fa":None, "in_csv":None, "in_var":None,
                  "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":"tmp.muts.csv", "out_anon": None}
     info_dict.update(config_dict)
