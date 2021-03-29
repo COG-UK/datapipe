@@ -169,7 +169,7 @@ def publish_file(outdir, info_dict):
 
     if info_dict["drop_index"]:
         cmd_list = ["fastafunk drop_columns --in-metadata", info_dict["out_csv"],
-        "--drop_columns", info_dict["drop_index"],
+        "--columns", info_dict["drop_index"],
         "--out-metadata", info_dict["out_anon"]]
         syscall(cmd_list)
 
