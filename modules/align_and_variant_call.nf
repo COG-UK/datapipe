@@ -248,6 +248,89 @@ process add_nucleotide_variants_to_metadata {
     """
 }
 
+
+process haplotype_constellations {
+    /**
+    * Adds a column to metadata table for each constellation, and a summary column for all found
+    * @input alignment
+    * @output haplotype_csv
+    * @params constellations
+    */
+
+    input:
+    path alignment
+
+    output:
+    path "${alignment.baseName}.haplotyped.csv"
+
+    script:
+    """
+    scorpio haplotype \
+      --input ${alignment} \
+      --output "${alignment.baseName}.haplotyped.csv" \
+      --output-counts \
+      --constellations ${params.constellations}
+    """
+}
+
+process classify_constellations {
+    /**
+    * Adds a column to metadata table for each constellation, and a summary column for all found
+    * @input alignment
+    * @output classify_csv
+    * @params constellations
+    */
+
+    input:
+    path alignment
+
+    output:
+    path "${alignment.baseName}.classified.csv"
+
+    script:
+    """
+    scorpio classify \
+      --input ${alignment} \
+      --output "${alignment.baseName}.classified.csv" \
+      --constellations ${params.constellations}
+    """
+}
+
+process add_constellations_to_metadata {
+    /**
+    * Adds constellations to metadata
+    * @input metadata, haplotyped, classified
+    * @output metadata
+    */
+
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
+
+    input:
+    path metadata
+    path haplotyped
+    path classified
+
+    output:
+    path "${metadata.baseName}.with_constellations.csv"
+
+    script:
+    """
+    fastafunk add_columns \
+          --in-metadata ${metadata} \
+          --in-data ${haplotyped} \
+          --index-column sequence_name \
+          --join-on query \
+          --out-metadata "tmp.with_haplotyped.csv"
+    fastafunk add_columns \
+          --in-metadata "tmp.with_haplotyped.csv" \
+          --in-data ${classified} \
+          --index-column sequence_name \
+          --join-on query \
+          --new-columns "constellations" \
+          --out-metadata "${metadata.baseName}.with_constellations.csv"
+    """
+}
+
 workflow align_and_variant_call {
     take:
         in_fasta
@@ -262,10 +345,13 @@ workflow align_and_variant_call {
         type_AAs_and_dels(alignment.out, get_variants.out, category)
         get_nuc_variants(get_snps.out, get_indels.out.deletions)
         add_nucleotide_variants_to_metadata(in_metadata, get_nuc_variants.out)
+        haplotype_constellations(alignment.out)
+        classify_constellations(alignment.out)
+        add_constellations_to_metadata(add_nucleotide_variants_to_metadata.out, haplotype_constellations.out, classify_constellations.out)
     emit:
         variants = type_AAs_and_dels.out
         fasta = alignment.out
-        metadata = add_nucleotide_variants_to_metadata.out
+        metadata = add_constellations_to_metadata.out
 }
 
 

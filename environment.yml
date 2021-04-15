@@ -22,6 +22,8 @@ dependencies:
       - git+https://github.com/cov-lineages/pangoLEARN.git
       - git+https://github.com/cov-ert/datafunk.git
       - git+https://github.com/cov-ert/fastafunk.git
+      - git+https://github.com/cov-lineages/constellations.git
+      - git+https://github.com/cov-lineages/scorpio.git
       - matplotlib==3.2.1
       - numpy==1.18.1
       - pweave==0.30.3
