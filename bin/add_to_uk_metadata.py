@@ -136,16 +136,42 @@ def date_string_to_epi_day(date_string):
         cum_epi_day = (date - day_one).days + 1
         return str(cum_epi_day)
 
+def date_string_to_safe_date_string(date_string):
+    """
+    parse a date string in YYYY-MM-DD format and return
+    date corresponding to the start of the epi-week in which it falls.
+    Week beginning 2019-12-22 is week 0
+    """
+    try:
+        date = datetime.strptime(date_string, '%Y-%m-%d').date()
+    except:
+        return ""
+    # this is epi-week:
+    week = Week.fromdate(date)
+
+    if week.year < 2019 or (week.year == 2019 and week.week < 52):
+        return ""
+    else:
+        return week.startdate().strftime('%Y-%m-%d')
+
 def add_epi_week_and_day(row):
     date_str = row["sample_date"]
     epi_week = date_string_to_epi_week(date_str)
     epi_day = date_string_to_epi_day(date_str)
+    safe_date = date_string_to_safe_date_string(date_str)
 
     row["edin_epi_week"] = epi_week
     row["edin_epi_day"] = epi_day
+    row["safe_sample_date"] = safe_date
 
 def United_Kingdom_to_UK(row):
     row["adm0"] = row["adm0"].replace("United Kingdom", "UK")
+
+def add_uk_columns(row):
+    row["is_cog_uk"] = True
+    country = adm1a_to_country[row['adm1']]
+    if country in ['England', 'Scotland', 'Wales', 'Northern_Ireland']:
+        row["is_uk"] = True
 
 def main():
     args = parse_args()
@@ -156,7 +182,7 @@ def main():
 
     date_dict = load_updated_dates(args.updated_date_file)
     accession_dict = load_accession(args.accession_file, log_handle)
-    new_columns = ["sample_date", "source_id", "pillar_2", "sequence_name", "covv_accession_id", "edin_epi_week", "edin_epi_day", "why_excluded"]
+    new_columns = ["sample_date", "source_id", "pillar_2", "sequence_name", "covv_accession_id", "edin_epi_week", "edin_epi_day", "safe_sample_date", "is_uk", "is_cog_uk", "why_excluded"]
 
     with open(args.in_metadata, 'r', newline = '') as csv_in, \
          open(args.out_metadata, 'w', newline = '') as csv_out:
@@ -175,6 +201,7 @@ def main():
                 add_epi_week_and_day(row)
                 United_Kingdom_to_UK(row)
                 row["why_excluded"] = ""
+                add_uk_columns(row)
                 writer.writerow(row)
             except:
                 log_handle.write(f"Error updating metadata for row")
