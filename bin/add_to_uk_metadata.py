@@ -10,7 +10,13 @@ from datetime import datetime
 adm1a_to_country = {"UK-SCT": "Scotland",
                     "UK-WLS": "Wales",
                     "UK-ENG": "England",
-                    "UK-NIR": "Northern_Ireland"}
+                    "UK-NIR": "Northern_Ireland",
+                    "FK": "Falkland_Islands",
+                    "GI": "Gibraltar",
+                    "JE": "Jersey",
+                    "IM": "Isle_of_Man",
+                    "GG": "Guernsey"
+                    }
 
 def parse_args():
     parser = argparse.ArgumentParser(description="""Add sample_date, pillar_2 and sequence_name columns""",
