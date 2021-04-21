@@ -45,6 +45,12 @@
       "mutations": true
     },
     {
+      "suffix": "constellations",
+      "data": "cog_global",
+      "metadata_fields": ["sequence_name", "sample_date", "lineage","lineages_version"],
+      "constellations": true
+    },
+    {
       "suffix": "unlinked",
       "data": "cog_global",
       "metadata_fields": ["sequence_name", "safe_sample_date", "epi_week", "safe_location","lineage","lineages_version","is_surveillance", "collection_pillar", "pillar_2"],

@@ -26,8 +26,10 @@ workflow {
                         process_cog_uk.out.aligned_fasta,
                         process_cog_uk.out.trimmed_fasta,
                         process_cog_uk.out.metadata,
-                        process_cog_uk.out.variants,
+                        process_cog_uk.out.mutations,
+                        process_cog_uk.out.constellations,
                         process_gisaid.out.fasta,
                         process_gisaid.out.metadata,
-                        process_gisaid.out.variants)
+                        process_gisaid.out.mutations,
+                        process_gisaid.out.constellations)
 }

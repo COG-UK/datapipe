@@ -29,11 +29,11 @@ process minimap2_to_reference {
     """
 }
 
-process get_variants {
+process get_mutations {
     /**
-    * Creates CSV of variants found in each genome
+    * Creates CSV of mutations found in each genome
     * @input sam
-    * @output variants
+    * @output mutations
     * @parms reference_fasta, reference_genbank
     */
 
@@ -44,7 +44,7 @@ process get_variants {
     val category
 
     output:
-    path "${category}.variants.csv"
+    path "${category}.mutations.csv"
 
     script:
     """
@@ -52,7 +52,7 @@ process get_variants {
       --samfile ${sam} \
       --reference ${reference_fasta} \
       --genbank ${reference_genbank} \
-      --outfile ${category}.variants.csv
+      --outfile ${category}.mutations.csv
     """
 }
 
@@ -152,7 +152,7 @@ process type_AAs_and_dels {
     val category
 
     output:
-    path "${category}/${category}_variants.csv"
+    path "${category}/${category}_mutations.csv"
 
     script:
     """
@@ -160,17 +160,19 @@ process type_AAs_and_dels {
     $project_dir/../bin/type_aas_and_dels.py \
       --in-fasta ${alignment} \
       --in-metadata ${metadata} \
-      --out-metadata ${category}/${category}_variants.csv \
+      --out-metadata "mutations.tmp.csv" \
       --reference-fasta ${reference_fasta} \
       --aas ${aas} \
       --dels ${dels} \
       --index-column query
+    sed "s/query/sequence_name/g" "mutations.tmp.csv" > ${category}/${category}_mutations.csv
+
     """
 }
 
-process get_nuc_variants {
+process get_nuc_mutations {
     /**
-    * Combines nucleotide variants into a metadata file which can be merged into the master
+    * Combines nucleotide mutations into a metadata file which can be merged into the master
     * @input snps, dels
     * @output metadata
     */
@@ -180,7 +182,7 @@ process get_nuc_variants {
     path dels
 
     output:
-    path "nuc_variants.csv"
+    path "nuc_mutations.csv"
 
     script:
     """
@@ -200,30 +202,30 @@ process get_nuc_variants {
                     sample_dict[sample] = [var]
 
     with open("${snps}", 'r', newline = '') as csv_in, \
-        open("nuc_variants.csv", 'w', newline = '') as csv_out:
+        open("nuc_mutations.csv", 'w', newline = '') as csv_out:
 
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
-        writer = csv.DictWriter(csv_out, fieldnames = ["sequence_name", "nucleotide_variants"], delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
+        writer = csv.DictWriter(csv_out, fieldnames = ["sequence_name", "nucleotide_mutations"], delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
         writer.writeheader()
 
         for row in reader:
             row["sequence_name"] = row["query"]
-            row["nucleotide_variants"] = row["SNPs"]
+            row["nucleotide_mutations"] = row["SNPs"]
             if row["sequence_name"] in sample_dict:
-                all_vars = [row["nucleotide_variants"]]
+                all_vars = [row["nucleotide_mutations"]]
                 all_vars.extend(sample_dict[row["sequence_name"]])
-                row["nucleotide_variants"] = '|'.join(all_vars)
-            for key in [k for k in row if k not in ["sequence_name", "nucleotide_variants"]]:
+                row["nucleotide_mutations"] = '|'.join(all_vars)
+            for key in [k for k in row if k not in ["sequence_name", "nucleotide_mutations"]]:
                 del row[key]
             writer.writerow(row)
     """
 }
 
 
-process add_nucleotide_variants_to_metadata {
+process add_nucleotide_mutations_to_metadata {
     /**
-    * Adds nucleotide variants to metadata
-    * @input metadata, nucleotide_variants
+    * Adds nucleotide mutations to metadata
+    * @input metadata, nucleotide_mutations
     * @output metadata
     */
 
@@ -231,20 +233,20 @@ process add_nucleotide_variants_to_metadata {
 
     input:
     path metadata
-    path nucleotide_variants
+    path nucleotide_mutations
 
     output:
-    path "${metadata.baseName}.with_nuc_variants.csv"
+    path "${metadata.baseName}.with_nuc_mutations.csv"
 
     script:
     """
     fastafunk add_columns \
           --in-metadata ${metadata} \
-          --in-data ${nucleotide_variants} \
+          --in-data ${nucleotide_mutations} \
           --index-column sequence_name \
           --join-on sequence_name \
-          --new-columns nucleotide_variants \
-          --out-metadata "${metadata.baseName}.with_nuc_variants.csv"
+          --new-columns nucleotide_mutationss \
+          --out-metadata "${metadata.baseName}.with_nuc_mutations.csv"
     """
 }
 
@@ -303,31 +305,24 @@ process add_constellations_to_metadata {
     * @output metadata
     */
 
-    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
+    publishDir "${publish_dev}/${params.category}", pattern: "*.csv", mode: 'copy', saveAs: {"${params.category}_constellations.csv"}
 
     input:
-    path metadata
     path haplotyped
     path classified
 
     output:
-    path "${metadata.baseName}.with_constellations.csv"
+    path "constellations.csv"
 
     script:
     """
     fastafunk add_columns \
-          --in-metadata ${metadata} \
+          --in-metadata ${classified} \
           --in-data ${haplotyped} \
-          --index-column sequence_name \
+          --index-column query \
           --join-on query \
-          --out-metadata "tmp.with_haplotyped.csv"
-    fastafunk add_columns \
-          --in-metadata "tmp.with_haplotyped.csv" \
-          --in-data ${classified} \
-          --index-column sequence_name \
-          --join-on query \
-          --new-columns "constellations" \
-          --out-metadata "${metadata.baseName}.with_constellations.csv"
+          --out-metadata "constellations.tmp.csv"
+    sed "s/query/sequence_name/g" "constellations.tmp.csv" > "constellations.csv"
     """
 }
 
@@ -338,20 +333,21 @@ workflow align_and_variant_call {
         category
     main:
         minimap2_to_reference(in_fasta)
-        get_variants(minimap2_to_reference.out, category)
+        get_mutations(minimap2_to_reference.out, category)
         get_indels(minimap2_to_reference.out, category)
         alignment(minimap2_to_reference.out)
         get_snps(alignment.out, category)
-        type_AAs_and_dels(alignment.out, get_variants.out, category)
-        get_nuc_variants(get_snps.out, get_indels.out.deletions)
-        add_nucleotide_variants_to_metadata(in_metadata, get_nuc_variants.out)
+        type_AAs_and_dels(alignment.out, get_mutations.out, category)
+        get_nuc_mutations(get_snps.out, get_indels.out.deletions)
+        add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
         haplotype_constellations(alignment.out)
         classify_constellations(alignment.out)
-        add_constellations_to_metadata(add_nucleotide_variants_to_metadata.out, haplotype_constellations.out, classify_constellations.out)
+        add_constellations_to_metadata(haplotype_constellations.out, classify_constellations.out)
     emit:
-        variants = type_AAs_and_dels.out
+        mutations = type_AAs_and_dels.out
+        constellations = add_constellations_to_metadata.out
         fasta = alignment.out
-        metadata = add_constellations_to_metadata.out
+        metadata = add_nucleotide_mutations_to_metadata.out
 }
 
 

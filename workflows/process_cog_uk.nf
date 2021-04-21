@@ -28,7 +28,8 @@ workflow process_cog_uk {
       aligned_fasta = align_and_variant_call.out.fasta
       trimmed_fasta = filter_and_trim_cog_uk.out.fasta
       metadata = filter_and_trim_cog_uk.out.metadata
-      variants = align_and_variant_call.out.variants
+      mutations = align_and_variant_call.out.mutations
+      constellations = align_and_variant_call.out.constellations
 }
 
 workflow {
@@ -44,14 +45,17 @@ workflow {
 
     ch_gisaid_fasta = Channel.fromPath(params.gisaid_fasta)
     ch_gisaid_metadata = Channel.fromPath(params.gisaid_metadata)
-    ch_gisaid_variants = Channel.fromPath(params.gisaid_variants)
+    ch_gisaid_mutations = Channel.fromPath(params.gisaid_mutations)
+    ch_gisaid_constellations = Channel.fromPath(params.gisaid_constellations)
 
     publish_cog_global(process_cog_uk.out.unaligned_fasta,
                         process_cog_uk.out.aligned_fasta,
                         process_cog_uk.out.trimmed_fasta,
                         process_cog_uk.out.metadata,
-                        process_cog_uk.out.variants,
+                        process_cog_uk.out.mutations,
+                        process_cog_uk.out.constellations,
                         ch_gisaid_fasta,
                         ch_gisaid_metadata,
-                        ch_gisaid_variants)
+                        ch_gisaid_mutations,
+                        ch_gisaid_constellations)
 }

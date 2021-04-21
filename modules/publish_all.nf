@@ -41,7 +41,7 @@ process combine_cog_gisaid {
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
-                          unmapped_genome_completeness duplicate why_excluded nucleotide_variants \
+                          unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
           --where-column epi_week=edin_epi_week epi_day=edin_epi_day country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1\
           --out-fasta "intermediate_cog.fa" \
@@ -61,7 +61,7 @@ process combine_cog_gisaid {
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
-                          unmapped_genome_completeness duplicate why_excluded nucleotide_variants\
+                          unmapped_genome_completeness duplicate why_excluded nucleotide_mutations\
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
           --where-column adm1=edin_admin_1 travel_history=edin_travel \
           --out-fasta "intermediate_gisaid.fa" \
@@ -79,56 +79,63 @@ process combine_cog_gisaid {
 }
 
 
-process combine_variants {
+process combine_mutations {
     /**
-    * Combines FASTA and METADATA for COG-UK and GISAID
+    * Combines FASTA and mutation metadata for COG-UK and GISAID
     * @input uk_fasta, uk_metadata, gisaid_fasta, gisaid_metadata
     * @output cog_gisaid_fasta, cog_gisaid_metadata
     */
 
-    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_variants.csv"}
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_mutations.csv"}
 
 
     input:
     path uk_fasta
-    path uk_variants
+    path uk_mutations
     path gisaid_fasta
-    path gisaid_variants
+    path gisaid_mutations
 
     output:
-    path "cog_gisaid_variants.csv"
+    path "cog_gisaid_mutations.csv"
 
     script:
     """
-    #!/usr/bin/env python3
-    from Bio import SeqIO
+    fastafunk merge \
+      --in-fasta ${uk_fasta} ${gisaid_fasta} \
+      --in-metadata ${uk_mutations} ${gisaid_mutations} \
+      --out-fasta "tmp.fa" \
+      --out-metadata "cog_gisaid_mutations.csv" \
+      --index-column "sequence_name"
+    """
+}
 
-    COG_fasta = SeqIO.index("${uk_fasta}", "fasta")
-    GISAID_fasta = SeqIO.index("${gisaid_fasta}", "fasta")
+process combine_constellations {
+    /**
+    * Combines FASTA and constellation metadata for COG-UK and GISAID
+    * @input uk_fasta, uk_metadata, gisaid_fasta, gisaid_metadata
+    * @output cog_gisaid_fasta, cog_gisaid_metadata
+    */
 
-    first = True
-    with open("${uk_variants}", "r") as COG_variants_in, \
-         open("${gisaid_variants}", "r") as GISAID_variants_in, \
-         open("cog_gisaid_variants.csv", "w") as variants_out:
-        for line in COG_variants_in:
-            if first:
-                variants_out.write(line)
-                first = False
-                continue
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_mutations.csv"}
 
-            sample = line.strip().split(",")[0]
-            if sample in COG_fasta:
-                variants_out.write(line)
 
-        first = True
-        for line in GISAID_variants_in:
-            if first:
-                first = False
-                continue
+    input:
+    path uk_fasta
+    path uk_constellations
+    path gisaid_fasta
+    path gisaid_constellations
 
-            sample = line.strip().split(",")[0]
-            if sample in GISAID_fasta:
-                variants_out.write(line)
+    output:
+    path "cog_gisaid_constellations.csv"
+
+    script:
+    """
+    fastafunk merge \
+      --in-fasta ${uk_fasta} ${gisaid_fasta} \
+      --in-metadata ${uk_constellations} ${gisaid_constellations} \
+      --out-fasta "tmp.fa" \
+      --out-metadata "cog_gisaid_constellations.csv" \
+      --index-column "sequence_name"
     """
 }
 
@@ -242,7 +249,7 @@ process publish_cog_global_recipes {
     /**
     * Publishes subsets of combined FASTA and METADATA for COG-UK and GISAID
     * @input uk_unaligned_fasta, uk_aligned_fasta, uk_trimmed_fasta, combined_fasta,
-    * uk_metadata, combined_metadata, uk_variants, combined_variants
+    * uk_metadata, combined_metadata, uk_mutations, combined_mutations
     * @params publish_recipes.json
     * @output many
     */
@@ -251,7 +258,7 @@ process publish_cog_global_recipes {
     publishDir "${publish_dir}/", pattern: "README", mode: 'copy', overwrite: false
 
     input:
-    tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(uk_variants),path(combined_variants),path(recipe)
+    tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(combined_mutations),path(combined_constellations),path(recipe)
 
     output:
     path "${recipe.baseName}.done.txt", emit: flag
@@ -273,8 +280,8 @@ process publish_cog_global_recipes {
       --cog_global_fasta ${combined_fasta} \
       --cog_metadata ${uk_metadata} \
       --cog_global_metadata ${combined_metadata} \
-      --cog_variants ${uk_variants} \
-      --cog_global_variants ${combined_variants} \
+      --mutations ${combined_mutations} \
+      --constellations ${combined_constellations} \
       --recipes ${recipe} \
       --date ${params.date}
       touch "${recipe.baseName}.done.txt"
@@ -311,7 +318,7 @@ process publish_gisaid_recipes {
     /**
     * Publishes subsets of combined FASTA and METADATA for COG-UK and GISAID
     * @input gisaid_unaligned_fasta, gisaid_aligned_fasta, gisaid_trimmed_fasta, combined_fasta,
-    * gisaid_metadata, combined_metadata, gisaid_variants, combined_variants
+    * gisaid_metadata, combined_metadata, gisaid_mutations, combined_mutations
     * @params publish_recipes.json
     * @output many
     */
@@ -319,13 +326,14 @@ process publish_gisaid_recipes {
     publishDir "${publish_dev}/", pattern: "*/*.*", mode: 'copy', overwrite: false
 
     input:
-    tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_variants),path(recipe)
+    tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_mutations),path(gisaid_constellations),path(recipe)
 
     output:
     path "*/gisaid_*.*", emit: all
     path "*/gisaid_*_global_alignment.fa", optional: true, emit: fasta
     path "*/gisaid_*_global_metadata.csv", optional: true, emit: metadata
-    path "*/gisaid_*_global_variants.csv", optional: true, emit: variants
+    path "*/gisaid_*_global_mutations.csv", optional: true, emit: mutations
+    path "*/gisaid_*_global_constellations.csv", optional: true, emit: constellations
 
     script:
     """
@@ -334,7 +342,8 @@ process publish_gisaid_recipes {
       --date ${params.date} \
       --gisaid_fasta ${gisaid_fasta} \
       --gisaid_metadata ${gisaid_metadata} \
-      --gisaid_variants ${gisaid_variants}
+      --mutations ${gisaid_mutations} \
+      --constellations ${gisaid_constellations}
     """
 }
 
@@ -374,13 +383,16 @@ workflow publish_cog_global {
         uk_aligned_fasta
         uk_fasta
         uk_metadata
-        uk_variants
+        uk_mutations
+        uk_constellations
         gisaid_fasta
         gisaid_metadata
-        gisaid_variants
+        gisaid_mutations
+        gisaid_constellations
     main:
         combine_cog_gisaid(uk_fasta, uk_metadata, gisaid_fasta, gisaid_metadata)
-        combine_variants(uk_fasta, uk_variants, gisaid_fasta, gisaid_variants)
+        combine_mutations(uk_fasta, uk_mutations, gisaid_fasta, gisaid_mutations)
+        combine_constellations(uk_fasta, uk_constellations, gisaid_fasta, gisaid_constellations)
         uk_geography(uk_fasta, uk_metadata)
         add_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
         split_recipes(cog_global_recipes)
@@ -390,8 +402,8 @@ workflow publish_cog_global {
                           .combine(combine_cog_gisaid.out.fasta)
                           .combine(uk_metadata)
                           .combine(add_geography_to_metadata.out.metadata)
-                          .combine(uk_variants)
-                          .combine(combine_variants.out)
+                          .combine(combine_mutations.out)
+                          .combine(combine_constellations.out)
                           .combine(recipe_ch)
                           .set{ publish_input_ch }
         publish_cog_global_recipes(publish_input_ch)
@@ -408,12 +420,14 @@ workflow publish_gisaid {
     take:
         gisaid_fasta
         gisaid_metadata
-        gisaid_variants
+        gisaid_mutations
+        gisaid_constellations
     main:
         split_recipes(gisaid_recipes)
         recipe_ch = split_recipes.out.flatten()
         gisaid_fasta.combine(gisaid_metadata)
-                    .combine(gisaid_variants)
+                    .combine(gisaid_mutations)
+                    .combine(gisaid_constellations)
                     .combine(recipe_ch)
                     .set{ publish_input_ch }
         publish_gisaid_recipes(publish_input_ch)
@@ -421,7 +435,8 @@ workflow publish_gisaid {
     emit:
         fasta = publish_gisaid_recipes.out.fasta
         metadata = publish_gisaid_recipes.out.metadata
-        variants = publish_gisaid_recipes.out.variants
+        mutations = publish_gisaid_recipes.out.mutations
+        constellations = publish_gisaid_recipes.out.constellations
         published = outputs_ch
 }
 
@@ -431,18 +446,22 @@ workflow {
     uk_aligned_fasta = Channel.fromPath(params.uk_aligned_fasta)
     uk_fasta = Channel.fromPath(params.uk_fasta)
     uk_metadata = Channel.fromPath(params.uk_metadata)
-    uk_variants = Channel.fromPath(params.uk_variants)
+    uk_mutations = Channel.fromPath(params.uk_mutations)
+    uk_constellations = Channel.fromPath(params.uk_constellations)
 
     gisaid_fasta = Channel.fromPath(params.gisaid_fasta)
     gisaid_metadata = Channel.fromPath(params.gisaid_metadata)
-    gisaid_variants = Channel.fromPath(params.gisaid_variants)
+    gisaid_mutations = Channel.fromPath(params.gisaid_mutations)
+    gisaid_constellations = Channel.fromPath(params.gisaid_constellations)
 
     publish_all(uk_unaligned_fasta,
                    uk_aligned_fasta,
                    uk_fasta,
                    uk_metadata,
-                   uk_variants,
+                   uk_mutations,
+                   uk_constellations,
                    gisaid_fasta,
                    gisaid_metadata,
-                   gisaid_variants)
+                   gisaid_mutations,
+                   gisaid_constellations)
 }

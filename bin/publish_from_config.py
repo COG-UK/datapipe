@@ -22,9 +22,8 @@ def parse_args():
     parser.add_argument('--gisaid_metadata', dest = 'global_metadata', required=False, help='MASSIVE CSV')
     parser.add_argument('--cog_global_metadata', dest = 'cog_global_metadata', required=False, help='MASSIVE CSV')
 
-    parser.add_argument('--cog_variants', dest = 'cog_variants', required=False, help='Mutations CSV')
-    parser.add_argument('--gisaid_variants', dest = 'global_variants', required=False, help='Mutations CSV')
-    parser.add_argument('--cog_global_variants', dest = 'cog_global_variants', required=False, help='Mutations CSV')
+    parser.add_argument('--mutations', dest = 'mutations', required=False, help='Mutations CSV')
+    parser.add_argument('--constellations', dest = 'constellations', required=False, help='Constellations CSV')
 
     parser.add_argument('--recipes', dest = 'recipes', required=True, help='JSON of recipes')
     parser.add_argument('--date', dest = 'date', required=True, help='Datestamp for published files')
@@ -43,12 +42,14 @@ def parse_args():
 #"uk_only": True or False to include only samples from UK from cog_global metadata
 #"drop_index": name of index column that should be dropped at the end
 
-def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_dict):
+def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, mutations_file, constellations_file):
     info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None,
-                 "where": None, "mutations":False, "shuffle": False, "drop_index": None,
-                 "exclude_uk":False, "uk_only": False, "date": date,
-                 "in_fa":None, "in_csv":None, "in_var":None,
-                 "out_fa":"tmp.fa", "out_csv":"tmp.csv", "out_var":"tmp.muts.csv", "out_anon": None}
+                 "where": None, "mutations":False, "constellations":False, 
+                 "shuffle":False, "drop_index": None,
+                 "exclude_uk":False, "uk_only": False, "exclude_cog":False, "cog_only": False,
+                 "date": date,
+                 "in_fa":None, "in_csv":None, "in_muts":None, "in_con":None,
+                 "out_fa":"tmp.fa", "intermediate_csv":"tmp.csv", "out_csv":"tmp.csv"}
     info_dict.update(config_dict)
 
     if info_dict["fasta"] in fasta_dict.keys():
@@ -73,13 +74,13 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
 
     if info_dict["data"] == "cog_global":
             info_dict["in_csv"] = csv_dict["cog_global"]
-            info_dict["in_var"] = var_dict["cog_global"]
     elif info_dict["data"] == "cog":
             info_dict["in_csv"] = csv_dict["cog"]
-            info_dict["in_var"] = var_dict["cog"]
     elif info_dict["data"] == "gisaid":
             info_dict["in_csv"] = csv_dict["gisaid"]
-            info_dict["in_var"] = var_dict["gisaid"]
+
+    info_dict["in_muts"] = mutations_file
+    info_dict["in_con"] = constellations_file
 
     start = "%s/%s_%s" %(outdir, info_dict["data"], info_dict["date"])
     if info_dict["suffix"]:
@@ -93,19 +94,16 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, var_di
         else:
             info_dict["out_fa"] = "%s.fa" %start
 
-    if info_dict["drop_index"]:
-        info_dict["out_anon"] = "%s%s" %(start, csv_end)
-    elif info_dict["mutations"]:
-        info_dict["out_var"] = "%s%s" %(start, csv_end)
-    else:
-        info_dict["out_csv"] = "%s%s" %(start, csv_end)
+    info_dict["out_csv"] = "%s%s" %(start, csv_end)
 
     if info_dict["out_fa"] != "tmp.fa" and info_dict["in_fa"] is None:
         sys.exit("Please provide the appropriate FASTA file")
     if info_dict["metadata_fields"] is not None and info_dict["in_csv"] is None:
         sys.exit("Please provide the appropriate CSV file")
-    if info_dict["mutations"] is not None and info_dict["in_var"] is None:
+    if info_dict["mutations"] is not None and info_dict["in_muts"] is None:
         sys.exit("Please provide the appropriate mutations file")
+    if info_dict["constellations"] is not None and info_dict["in_con"] is None:
+            sys.exit("Please provide the appropriate mutations file")
     print(info_dict)
     return info_dict
 
@@ -132,18 +130,28 @@ def publish_file(outdir, info_dict):
         return
 
     if info_dict["exclude_uk"]:
-        cmd_list = ["head -n1", info_dict["in_csv"], "> tmp.no_uk.csv"]
-        syscall(cmd_list)
-        cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -v -E \"England|Northern_Ireland|Wales|Scotland\"", ">> tmp.no_uk.csv"]
+        cmd_list = ["fastafunk filter_column --in-metadata", info_dict["in_csv"],
+        "--out-metadata tmp.no_uk.csv --column is_uk --is_true"]
         syscall(cmd_list)
         info_dict["in_csv"] = "tmp.no_uk.csv"
 
+    if info_dict["exclude_cog"]:
+        cmd_list = ["fastafunk filter_column --in-metadata", info_dict["in_csv"],
+        "--out-metadata tmp.no_cog.csv --column is_cog_uk --is_true"]
+        syscall(cmd_list)
+        info_dict["in_csv"] = "tmp.no_cog.csv"
+
     if info_dict["uk_only"]:
-            cmd_list = ["head -n1", info_dict["in_csv"], "> tmp.uk_only.csv"]
-            syscall(cmd_list)
-            cmd_list = ["tail -n+2", info_dict["in_csv"], "| grep -E \"England|Northern_Ireland|Wales|Scotland\"", ">> tmp.uk_only.csv"]
-            syscall(cmd_list)
-            info_dict["in_csv"] = "tmp.uk_only.csv"
+        cmd_list = ["fastafunk filter_column --in-metadata", info_dict["in_csv"],
+        "--out-metadata tmp.uk_only.csv --column is_uk --is_false"]
+        syscall(cmd_list)
+        info_dict["in_csv"] = "tmp.uk_only.csv"
+
+    if info_dict["cog_only"]:
+        cmd_list = ["fastafunk filter_column --in-metadata", info_dict["in_csv"],
+        "--out-metadata tmp.cog_only.csv --column is_cog_uk --is_false"]
+        syscall(cmd_list)
+        info_dict["in_csv"] = "tmp.cog_only.csv"
 
     if info_dict["shuffle"]:
         cmd_list = ["fastafunk shuffle --in-metadata", info_dict["in_csv"], "--out-metadata", "tmp.shuffled.csv"]
@@ -152,7 +160,7 @@ def publish_file(outdir, info_dict):
 
     cmd_list = ["fastafunk fetch --in-fasta", info_dict["in_fa"], "--in-metadata", info_dict["in_csv"],
               "--index-column sequence_name --out-fasta", info_dict["out_fa"],
-              "--out-metadata", info_dict["out_csv"], "--restrict --low-memory --keep-omit-rows"]
+              "--out-metadata", info_dict["intermediate_csv"], "--restrict --low-memory --keep-omit-rows"]
     if info_dict["metadata_fields"]:
             cmd_list.append("--filter-column")
             cmd_list.extend(info_dict["metadata_fields"])
@@ -161,17 +169,27 @@ def publish_file(outdir, info_dict):
     syscall(cmd_list)
 
     if info_dict["mutations"]:
-        cmd_list = ["fastafunk add_columns --in-metadata", info_dict["out_csv"],
-        "--in-data", info_dict["in_var"], "--index-column sequence_name",
-        "--join-on query --out-metadata", info_dict["out_var"]]
-        info_dict["out_csv"] = info_dict["out_var"]
+        cmd_list = ["fastafunk add_columns --in-metadata", info_dict["intermediate_csv"],
+        "--in-data", info_dict["in_muts"], "--index-column sequence_name",
+        "--join-on sequence_name --out-metadata tmp.muts.csv"]
+        info_dict["intermediate_csv"] = "tmp.muts.csv"
         syscall(cmd_list)
 
+    if info_dict["constellations"]:
+            cmd_list = ["fastafunk add_columns --in-metadata", info_dict["intermediate_csv"],
+            "--in-data", info_dict["in_con"], "--index-column sequence_name",
+            "--join-on sequence_name --out-metadata tmp.constellations.csv"]
+            info_dict["intermediate_csv"] = "tmp.constellations.csv"
+            syscall(cmd_list)
+
     if info_dict["drop_index"]:
-        cmd_list = ["fastafunk drop_columns --in-metadata", info_dict["out_csv"],
+        cmd_list = ["fastafunk drop_columns --in-metadata", info_dict["intermediate_csv"],
         "--columns", info_dict["drop_index"],
-        "--out-metadata", info_dict["out_anon"]]
+        "--out-metadata tmp.anon.csv"]
         syscall(cmd_list)
+
+    cmd_list = ["mv", info_dict["intermediate_csv"], info_dict["out_csv"]]
+    syscall(cmd_list)
 
     #tmp = glob.glob("tmp.*")
     #if len(tmp) > 0:
@@ -185,8 +203,10 @@ def main():
     print(fasta_dict)
     csv_dict = {"cog":args.cog_metadata, "cog_global":args.cog_global_metadata, "gisaid": args.global_metadata}
     print(csv_dict)
-    var_dict = {"cog":args.cog_variants, "cog_global":args.cog_global_variants, "gisaid": args.global_variants}
-    print(var_dict)
+    mutations_file = args.mutations
+    print(mutations_file)
+    constellations_file = args.constellations
+    print(constellations_file)
 
     recipes = {}
     with open(args.recipes, 'r') as f:
@@ -195,7 +215,7 @@ def main():
     for outdir in recipes.keys():
         os.makedirs(outdir,exist_ok=True)
         for recipe in recipes[outdir]:
-            info_dict = get_info_from_config(recipe, outdir, args.date, fasta_dict, csv_dict, var_dict)
+            info_dict = get_info_from_config(recipe, outdir, args.date, fasta_dict, csv_dict, mutations_file, constellations_file)
             publish_file(outdir, info_dict)
 
 if __name__ == '__main__':

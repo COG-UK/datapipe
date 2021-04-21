@@ -178,6 +178,8 @@ def add_uk_columns(row):
     country = adm1a_to_country[row['adm1']]
     if country in ['England', 'Scotland', 'Wales', 'Northern_Ireland']:
         row["is_uk"] = True
+    else:
+        row["is_uk"] = False
 
 def main():
     args = parse_args()
