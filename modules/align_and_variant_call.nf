@@ -165,7 +165,8 @@ process type_AAs_and_dels {
       --aas ${aas} \
       --dels ${dels} \
       --index-column query
-    sed "s/query/sequence_name/g" "mutations.tmp.csv" > ${category}/${category}_mutations.csv
+    sed "s/query/sequence_name/g" "mutations.tmp.csv" > mutations.tmp2.csv
+    sed "s/variants/mutations/g" "mutations.tmp2.csv" > ${category}/${category}_mutations.csv
 
     """
 }
