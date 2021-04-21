@@ -396,8 +396,11 @@ workflow publish_cog_global {
                           .set{ publish_input_ch }
         publish_cog_global_recipes(publish_input_ch)
         outputs_ch = publish_cog_global_recipes.out.flag.collect()
-        announce_to_webhook(outputs_ch, "Datapipe")
-        publish_s3(publish_cog_global_recipes.out.fasta, publish_cog_global_recipes.out.metadata, publish_cog_global_recipes.out.alignment, publish_cog_global_recipes.out.unmasked_alignment)
+        announce_to_webhook(outputs_ch, "${params.whoami}")
+        if ( params.s3 )
+        {
+            publish_s3(publish_cog_global_recipes.out.fasta, publish_cog_global_recipes.out.metadata, publish_cog_global_recipes.out.alignment, publish_cog_global_recipes.out.unmasked_alignment)
+        }
 }
 
 

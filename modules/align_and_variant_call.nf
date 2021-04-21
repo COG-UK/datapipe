@@ -269,7 +269,7 @@ process haplotype_constellations {
       --input ${alignment} \
       --output "${alignment.baseName}.haplotyped.csv" \
       --output-counts \
-      --constellations ${params.constellations}
+      --constellations ${constellations}/*.json
     """
 }
 
@@ -292,7 +292,7 @@ process classify_constellations {
     scorpio classify \
       --input ${alignment} \
       --output "${alignment.baseName}.classified.csv" \
-      --constellations ${params.constellations}
+      --constellations ${constellations}/*.json
     """
 }
 
@@ -359,7 +359,7 @@ aas = file(params.aas)
 dels = file(params.dels)
 reference_fasta = file(params.reference_fasta)
 reference_genbank = file(params.reference_genbank)
-
+constellations = file(params.constellations)
 
 workflow {
     uk_fasta = Channel.fromPath(params.uk_fasta)
