@@ -88,7 +88,6 @@ process combine_mutations {
 
     publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_mutations.csv"}
 
-
     input:
     path uk_fasta
     path uk_mutations
@@ -116,8 +115,7 @@ process combine_constellations {
     * @output cog_gisaid_fasta, cog_gisaid_metadata
     */
 
-    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_mutations.csv"}
-
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_constellations.csv"}
 
     input:
     path uk_fasta
@@ -213,7 +211,7 @@ process add_geography_to_metadata {
           --in-data ${geography_metadata} \
           --index-column sequence_name \
           --join-on sequence_name \
-          --new-columns adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location\
+          --new-columns adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location \
           --out-metadata "cog_gisaid_geography.csv"
     """
 }
@@ -323,7 +321,7 @@ process publish_gisaid_recipes {
     * @output many
     */
 
-    publishDir "${publish_dev}/", pattern: "*/*.*", mode: 'copy', overwrite: false
+    publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
 
     input:
     tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_mutations),path(gisaid_constellations),path(recipe)

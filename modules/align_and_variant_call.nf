@@ -229,8 +229,6 @@ process add_nucleotide_mutations_to_metadata {
     * @output metadata
     */
 
-    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
-
     input:
     path metadata
     path nucleotide_mutations
@@ -245,7 +243,7 @@ process add_nucleotide_mutations_to_metadata {
           --in-data ${nucleotide_mutations} \
           --index-column sequence_name \
           --join-on sequence_name \
-          --new-columns nucleotide_mutationss \
+          --new-columns nucleotide_mutations \
           --out-metadata "${metadata.baseName}.with_nuc_mutations.csv"
     """
 }
@@ -305,24 +303,26 @@ process add_constellations_to_metadata {
     * @output metadata
     */
 
-    publishDir "${publish_dev}/${params.category}", pattern: "*.csv", mode: 'copy', saveAs: {"${params.category}_constellations.csv"}
+    publishDir "${publish_dev}", pattern: "*/*.csv", mode: 'copy'
 
     input:
     path haplotyped
     path classified
+    val category
 
     output:
-    path "constellations.csv"
+    path "${category}/${category}_constellations.csv"
 
     script:
     """
+    mkdir -p ${category}
     fastafunk add_columns \
           --in-metadata ${classified} \
           --in-data ${haplotyped} \
           --index-column query \
           --join-on query \
           --out-metadata "constellations.tmp.csv"
-    sed "s/query/sequence_name/g" "constellations.tmp.csv" > "constellations.csv"
+    sed "s/query/sequence_name/g" "constellations.tmp.csv" > "${category}/${category}_constellations.csv"
     """
 }
 
@@ -342,7 +342,7 @@ workflow align_and_variant_call {
         add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
         haplotype_constellations(alignment.out)
         classify_constellations(alignment.out)
-        add_constellations_to_metadata(haplotype_constellations.out, classify_constellations.out)
+        add_constellations_to_metadata(haplotype_constellations.out, classify_constellations.out, category)
     emit:
         mutations = type_AAs_and_dels.out
         constellations = add_constellations_to_metadata.out

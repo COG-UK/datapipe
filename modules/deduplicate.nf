@@ -246,7 +246,7 @@ process uk_label_sourceid_duplicates_to_omit {
     * @output uk_fasta_updated, uk_metadata_updated
     */
 
-    publishDir "${publish_dev}/", pattern: "*.log", mode: 'copy'
+    publishDir "${publish_dev}/cog_gisaid/", pattern: "*.log", mode: 'copy'
 
     input:
     path uk_metadata
