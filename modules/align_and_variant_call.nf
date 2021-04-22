@@ -174,13 +174,14 @@ process type_AAs_and_dels {
 process get_nuc_mutations {
     /**
     * Combines nucleotide mutations into a metadata file which can be merged into the master
-    * @input snps, dels
+    * @input snps, dels, ins
     * @output metadata
     */
 
     input:
     path snps
     path dels
+    path ins
 
     output:
     path "nuc_mutations.csv"
@@ -196,6 +197,17 @@ process get_nuc_mutations {
             ref_start, length, samples = line.strip().split()
             samples = samples.split('|')
             var = "del_%s_%s" %(ref_start, length)
+            for sample in samples:
+                if sample in sample_dict:
+                    sample_dict[sample].append(var)
+                else:
+                    sample_dict[sample] = [var]
+
+    with open("${ins}", 'r', newline = '') as csv_in:
+        for line in csv_in:
+            ref_start, insertion, samples= line.strip().split()
+            samples = samples.split('|')
+            var = "ins_%s_%s" %(ref_start, insertion)
             for sample in samples:
                 if sample in sample_dict:
                     sample_dict[sample].append(var)
@@ -340,7 +352,7 @@ workflow align_and_variant_call {
         alignment(minimap2_to_reference.out)
         get_snps(alignment.out, category)
         type_AAs_and_dels(alignment.out, get_mutations.out, category)
-        get_nuc_mutations(get_snps.out, get_indels.out.deletions)
+        get_nuc_mutations(get_snps.out, get_indels.out.deletions, get_indels.out.insertions)
         add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
         haplotype_constellations(alignment.out)
         classify_constellations(alignment.out)
