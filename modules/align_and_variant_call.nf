@@ -229,6 +229,7 @@ process add_nucleotide_mutations_to_metadata {
     * @input metadata, nucleotide_mutations
     * @output metadata
     */
+    label 'retry_increasing_mem'
 
     input:
     path metadata
