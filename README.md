@@ -6,6 +6,14 @@ Runs weekly on global sequences downloaded from GISAID.
 
 Runs daily on COG-UK sequences, and combines with non-UK GISAID sequences.
 
+### Install and run
+	git clone --recurse-submodules https://github.com/COG-UK/grapevine_nextflow.git
+	cd grapevine_nextflow
+	conda env create -f environment.yml
+	conda activate grapevine_nextflow
+
+	NXF_VER=20.10.0 nextflow run workflows/process_cog_uk.nf <params>
+
 ### Pipeline Overview
 
 #### GISAID processing
