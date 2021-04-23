@@ -186,7 +186,9 @@ def publish_file(outdir, info_dict):
         cmd_list = ["fastafunk drop_columns --in-metadata", info_dict["intermediate_csv"],
         "--columns", info_dict["drop_index"],
         "--out-metadata tmp.anon.csv"]
+        info_dict["intermediate_csv"] = "tmp.anon.csv"
         syscall(cmd_list)
+
 
     cmd_list = ["mv", info_dict["intermediate_csv"], info_dict["out_csv"]]
     syscall(cmd_list)
