@@ -68,13 +68,9 @@ process combine_cog_gisaid {
           --out-metadata "intermediate_gisaid.csv" \
           --restrict --low-memory
 
-        fastafunk merge \
-          --in-fasta "intermediate_cog.fa" "intermediate_gisaid.fa" \
-          --in-metadata "intermediate_cog.csv" "intermediate_gisaid.csv" \
-          --out-fasta "cog_gisaid.fa" \
-          --out-metadata "cog_gisaid.csv" \
-          --index-column sequence_name \
-          --low-memory
+        cat intermediate_cog.fa intermediate_gisaid.fa > cog_gisaid.fa
+        cat intermediate_cog.csv > cog_gisaid.csv
+        tail -n+1 intermediate_gisaid.csv >> cog_gisaid.csv
     """
 }
 
@@ -89,9 +85,7 @@ process combine_mutations {
     publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_mutations.csv"}
 
     input:
-    path uk_fasta
     path uk_mutations
-    path gisaid_fasta
     path gisaid_mutations
 
     output:
@@ -100,9 +94,7 @@ process combine_mutations {
     script:
     """
     fastafunk merge \
-      --in-fasta ${uk_fasta} ${gisaid_fasta} \
       --in-metadata ${uk_mutations} ${gisaid_mutations} \
-      --out-fasta "tmp.fa" \
       --out-metadata "cog_gisaid_mutations.csv" \
       --index-column "sequence_name"
     """
@@ -118,9 +110,7 @@ process combine_constellations {
     publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_constellations.csv"}
 
     input:
-    path uk_fasta
     path uk_constellations
-    path gisaid_fasta
     path gisaid_constellations
 
     output:
@@ -129,9 +119,7 @@ process combine_constellations {
     script:
     """
     fastafunk merge \
-      --in-fasta ${uk_fasta} ${gisaid_fasta} \
       --in-metadata ${uk_constellations} ${gisaid_constellations} \
-      --out-fasta "tmp.fa" \
       --out-metadata "cog_gisaid_constellations.csv" \
       --index-column "sequence_name"
     """
@@ -389,8 +377,8 @@ workflow publish_cog_global {
         gisaid_constellations
     main:
         combine_cog_gisaid(uk_fasta, uk_metadata, gisaid_fasta, gisaid_metadata)
-        combine_mutations(uk_fasta, uk_mutations, gisaid_fasta, gisaid_mutations)
-        combine_constellations(uk_fasta, uk_constellations, gisaid_fasta, gisaid_constellations)
+        combine_mutations(uk_mutations, gisaid_mutations)
+        combine_constellations(uk_constellations, gisaid_constellations)
         uk_geography(uk_fasta, uk_metadata)
         add_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
         split_recipes(cog_global_recipes)
