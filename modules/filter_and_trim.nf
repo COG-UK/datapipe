@@ -221,12 +221,19 @@ workflow filter_and_trim_gisaid {
     main:
         filter_low_coverage_sequences(gisaid_fasta, gisaid_metadata)
         trim_alignment(filter_low_coverage_sequences.out.fasta_updated)
-        distance_QC(trim_alignment.out, filter_low_coverage_sequences.out.metadata_updated, "gisaid")
-        filter_on_distance_to_WH04(gisaid_fasta, gisaid_metadata, distance_QC.out)
-        publish_master_metadata(filter_on_distance_to_WH04.out.metadata, "gisaid")
+        if ( params.distance_qc ){
+            distance_QC(trim_alignment.out, filter_low_coverage_sequences.out.metadata_updated, "gisaid")
+            filter_on_distance_to_WH04(gisaid_fasta, gisaid_metadata, distance_QC.out)
+            ch_fasta = filter_on_distance_to_WH04.out.fasta
+            ch_metadata = filter_on_distance_to_WH04.out.metadata
+        } else {
+            ch_fasta = trim_alignment.out
+            ch_metadata = filter_low_coverage_sequences.out.metadata_updated
+        }
+        publish_master_metadata(ch_metadata, "gisaid")
     emit:
-        fasta = filter_on_distance_to_WH04.out.fasta
-        metadata = filter_on_distance_to_WH04.out.metadata
+        fasta = ch_fasta
+        metadata = ch_metadata
 }
 
 
