@@ -35,7 +35,7 @@ process combine_cog_gisaid {
           --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
                           pillar_2 \
                           sequence_name sample_date safe_sample_date epi_week epi_day \
-                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location is_uk is_cog_uk\
+                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location is_uk is_cog_uk \
                           submission_org_code is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
                           lineage lineage_support lineages_version \
@@ -43,7 +43,7 @@ process combine_cog_gisaid {
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
                           unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
-          --where-column epi_week=edin_epi_week epi_day=edin_epi_day country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1\
+          --where-column epi_week=edin_epi_week epi_day=edin_epi_day country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1 \
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
           --restrict --low-memory
@@ -55,13 +55,13 @@ process combine_cog_gisaid {
           --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
                           pillar_2 \
                           sequence_name sample_date safe_sample_date epi_week epi_day \
-                          country adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location is_uk is_cog_uk \
+                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location is_uk is_cog_uk \
                           submission_org_code is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
                           lineage lineage_support lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
-                          unmapped_genome_completeness duplicate why_excluded nucleotide_mutations\
+                          unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
           --where-column adm1=edin_admin_1 travel_history=edin_travel \
           --out-fasta "intermediate_gisaid.fa" \
