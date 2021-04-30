@@ -182,6 +182,38 @@ process uk_filter_on_sample_date {
 }
 
 
+process add_previous_uk_lineage_to_metadata {
+    /**
+    * Adds uk_lineage where previously assigned
+    * @input metadata
+    * @output metadata
+    */
+    label 'retry_increasing_mem'
+
+    input:
+    path metadata
+
+    output:
+    path "${metadata.baseName}.with_uk_lineage.csv"
+
+    script:
+    if ( !params.previous_metadata )
+        """
+        mv ${metadata} "${metadata.baseName}.with_uk_lineage.csv"
+        """
+    else
+        """
+        fastafunk add_columns \
+              --in-metadata ${metadata} \
+              --in-data ${params.previous_metadata} \
+              --index-column sequence_name \
+              --join-on sequence_name \
+              --new-columns uk_lineage \
+              --out-metadata "${metadata.baseName}.with_uk_lineage.csv"
+        """
+}
+
+
 process announce_summary {
     /**
     * Summarizes preprocess into JSON
@@ -237,10 +269,11 @@ workflow preprocess_cog_uk {
         uk_add_columns_to_metadata(uk_metadata, uk_accessions, uk_updated_dates)
         uk_filter_omitted_sequences(uk_strip_header_digits_and_unalign.out, uk_add_columns_to_metadata.out, uk_omissions)
         uk_filter_on_sample_date(uk_filter_omitted_sequences.out.fasta, uk_filter_omitted_sequences.out.metadata)
+        add_previous_uk_lineage_to_metadata(uk_filter_omitted_sequences.out.metadata)
         announce_summary(uk_fasta, uk_strip_header_digits_and_unalign.out, uk_filter_omitted_sequences.out.fasta, uk_filter_on_sample_date.out.fasta)
     emit:
         fasta = uk_filter_on_sample_date.out.fasta
-        metadata = uk_filter_on_sample_date.out.metadata
+        metadata = add_previous_uk_lineage_to_metadata.out
 }
 
 
