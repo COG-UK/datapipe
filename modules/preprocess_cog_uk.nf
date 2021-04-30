@@ -201,7 +201,7 @@ process announce_summary {
         if (params.webhook)
             """
             echo '{"text":"' > announce.json
-                echo "*${params.whoami}: Subsampling ${params.date} for tree*\\n" >> announce.json
+                echo "*${params.whoami}: Preprocessing COG input ${params.date}*\\n" >> announce.json
                 echo "> Number of sequences in COG input files : \$(cat ${original} | grep '>' | wc -l)\\n" >> announce.json
                 echo "> Number of sequences after header stripped : \$(cat ${strip_header} | grep '>' | wc -l)\\n" >> announce.json
                 echo "> Number of sequences after filtering omitted: \$(cat ${filter_omitted_sequences} | grep '>' | wc -l)\\n" >> announce.json
@@ -214,7 +214,13 @@ process announce_summary {
             """
         else
             """
-            touch "announce.json"
+            echo '{"text":"' > announce.json
+                echo "*${params.whoami}: Preprocessing COG input ${params.date}*\\n" >> announce.json
+                echo "> Number of sequences in COG input files : \$(cat ${original} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> Number of sequences after header stripped : \$(cat ${strip_header} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> Number of sequences after filtering omitted: \$(cat ${filter_omitted_sequences} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> Number of sequences after filtering by sample date with time window ${params.time_window}: \$(cat ${filter_on_sample_date} | grep '>' | wc -l)\\n" >> announce.json
+                echo '"}' >> announce.json
             """
 }
 
