@@ -181,6 +181,43 @@ process uk_filter_on_sample_date {
         """
 }
 
+
+process announce_summary {
+    /**
+    * Summarizes preprocess into JSON
+    * @input fastas
+    */
+
+    input:
+    path original
+    path strip_header
+    path filter_omitted_sequences
+    path filter_on_sample_date
+
+    output:
+    path "announce.json"
+
+    script:
+        if (params.webhook)
+            """
+            echo '{"text":"' > announce.json
+                echo "*${params.whoami}: Subsampling ${params.date} for tree*\\n" >> announce.json
+                echo "> Number of sequences in COG input files : \$(cat ${original} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> Number of sequences after header stripped : \$(cat ${strip_header} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> Number of sequences after filtering omitted: \$(cat ${filter_omitted_sequences} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> Number of sequences after filtering by sample date with time window ${params.time_window}: \$(cat ${filter_on_sample_date} | grep '>' | wc -l)\\n" >> announce.json
+                echo '"}' >> announce.json
+
+            echo 'webhook ${params.webhook}'
+
+            curl -X POST -H "Content-type: application/json" -d @announce.json ${params.webhook}
+            """
+        else
+            """
+            touch "announce.json"
+            """
+}
+
 uk_updated_dates = file(params.uk_updated_dates)
 uk_omissions = file(params.uk_omissions)
 
@@ -194,6 +231,7 @@ workflow preprocess_cog_uk {
         uk_add_columns_to_metadata(uk_metadata, uk_accessions, uk_updated_dates)
         uk_filter_omitted_sequences(uk_strip_header_digits_and_unalign.out, uk_add_columns_to_metadata.out, uk_omissions)
         uk_filter_on_sample_date(uk_filter_omitted_sequences.out.fasta, uk_filter_omitted_sequences.out.metadata)
+        announce_summary(uk_fasta, uk_strip_header_digits_and_unalign.out, uk_filter_omitted_sequences.out.fasta, uk_filter_on_sample_date.out.fasta)
     emit:
         fasta = uk_filter_on_sample_date.out.fasta
         metadata = uk_filter_on_sample_date.out.metadata
