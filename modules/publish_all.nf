@@ -70,7 +70,7 @@ process combine_cog_gisaid {
 
         cat intermediate_cog.fa intermediate_gisaid.fa > cog_gisaid.fa
         cat intermediate_cog.csv > cog_gisaid.csv
-        tail -n+1 intermediate_gisaid.csv >> cog_gisaid.csv
+        tail -n+2 intermediate_gisaid.csv >> cog_gisaid.csv
 
         head -n1 intermediate_cog.csv > head_cog.txt
         head -n1 intermediate_gisaid.csv > head_gisaid.txt
