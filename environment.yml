@@ -1,4 +1,4 @@
-name: grapevine_nextflow
+name: datapipe
 channels:
   - bioconda
   - conda-forge
