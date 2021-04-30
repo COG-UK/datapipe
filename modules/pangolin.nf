@@ -111,7 +111,8 @@ process add_new_pangolin_lineages_to_metadata {
     path pangolin_csv
 
     output:
-    path "${metadata.baseName}.with_pangolin.csv"
+    path "${metadata.baseName}.with_pangolin.csv", emit: metadata
+    path "pango.log", emit: log
 
     script:
     """
@@ -132,6 +133,7 @@ process add_new_pangolin_lineages_to_metadata {
                 lineage_dict[row["taxon"]]["probability"] = "1.0"
 
 
+    missing_lineage = 0
     with open("${metadata}", 'r', newline = '') as csv_in, \
          open("${metadata.baseName}.with_pangolin.csv", 'w', newline = '') as csv_out:
 
@@ -151,8 +153,51 @@ process add_new_pangolin_lineages_to_metadata {
                 row["lineage"] = lineage_dict[fasta_header]["lineage"]
                 row["pangoLEARN_version"] = lineage_dict[fasta_header]["pangoLEARN_version"]
                 row["probability"] = lineage_dict[fasta_header]["probability"]
+            if "lineage" not in row:
+                missing_lineage += 1
+            elif not row["lineage"]:
+                missing_lineage += 1
             writer.writerow(row)
+    with open("pango.log", "w") as f:
+        f.write("Number of sequences missing lineage assignments after running pangolin: %i" %missing_lineage)
     """
+}
+
+
+process announce_summary {
+    /**
+    * Summarizes pangolin into JSON
+    * @input fastas
+    */
+
+    input:
+    path pango_input
+    path pango_log
+
+    output:
+    path "announce.json"
+
+    script:
+        if (params.webhook)
+            """
+            echo '{"text":"' > announce.json
+                echo "*${params.whoami}: Finished running pangolin ${params.date}*\\n" >> announce.json
+                echo "> Number of sequences input to pangolin for new lineage assignments : \$(cat ${pango_input} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> \$(cat ${pango_log})\\n" >> announce.json
+                echo '"}' >> announce.json
+
+            echo 'webhook ${params.webhook}'
+
+            curl -X POST -H "Content-type: application/json" -d @announce.json ${params.webhook}
+            """
+        else
+            """
+            echo '{"text":"' > announce.json
+                echo "*${params.whoami}: Finished running pangolin ${params.date}*\\n" >> announce.json
+                echo "> Number of sequences input to pangolin for new lineage assignments : \$(cat ${pango_input} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> \$(cat ${pango_log})\\n" >> announce.json
+                echo '"}' >> announce.json
+            """
 }
 
 workflow pangolin {
@@ -168,8 +213,9 @@ workflow pangolin {
         run_pangolin.out.collectFile(newLine: true, keepHeader: true, skip: 1)
                         .set{ pangolin_result }
         add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, pangolin_result)
+        announce_summary(extract_sequences_for_pangolin.out.pangolin_fasta, add_new_pangolin_lineages_to_metadata.out.log)
     emit:
-        metadata = add_new_pangolin_lineages_to_metadata.out
+        metadata = add_new_pangolin_lineages_to_metadata.out.metadata
 }
 
 

@@ -25,7 +25,7 @@ process minimap2_to_reference {
 
     script:
     """
-    minimap2 -t ${task.cpus} -a -x asm5 ${reference_fasta} ${fasta} > alignment.sam
+    minimap2 -t ${task.cpus} -a -x asm20 ${reference_fasta} ${fasta} > alignment.sam
     """
 }
 
@@ -235,6 +235,38 @@ process get_nuc_mutations {
 }
 
 
+process restrict_metadata {
+    /**
+    * restricts only to sequences not excluded
+    * @input metadata
+    * @output metadata
+    */
+
+    input:
+    path metadata
+
+    output:
+    path "${metadata.baseName}.restricts.csv"
+
+    script:
+    """
+    #!/usr/bin/env python3
+    import csv
+
+    with open("${metadata}", 'r', newline = '') as csv_in, \
+        open("${metadata.baseName}.restricts.csv", 'w', newline = '') as csv_out:
+
+        reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
+        writer = csv.DictWriter(csv_out, fieldnames = reader.fieldnames, delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
+        writer.writeheader()
+
+        for row in reader:
+            if row["why_excluded"] not in [None, "", "None"]:
+                writer.writerow(row)
+    """
+}
+
+
 process add_nucleotide_mutations_to_metadata {
     /**
     * Adds nucleotide mutations to metadata
@@ -340,6 +372,43 @@ process add_constellations_to_metadata {
     """
 }
 
+
+process announce_summary {
+    /**
+    * Summarizes alignment into JSON
+    * @input fastas
+    */
+
+    input:
+    path fasta
+    path alignment
+
+    output:
+    path "announce.json"
+
+    script:
+        if (params.webhook)
+            """
+            echo '{"text":"' > announce.json
+                echo "*${params.whoami}: Finished alignment and variant calling ${params.date}*\\n" >> announce.json
+                echo "> Number of sequences in FASTA : \$(cat ${fasta} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> Number of sequences in ALIGNMENT : \$(cat ${alignment} | grep '>' | wc -l)\\n" >> announce.json
+                echo '"}' >> announce.json
+
+            echo 'webhook ${params.webhook}'
+
+            curl -X POST -H "Content-type: application/json" -d @announce.json ${params.webhook}
+            """
+        else
+            """
+            echo '{"text":"' > announce.json
+                echo "*${params.whoami}: Finished alignment and variant calling ${params.date}*\\n" >> announce.json
+                echo "> Number of sequences in FASTA : \$(cat ${fasta} | grep '>' | wc -l)\\n" >> announce.json
+                echo "> Number of sequences in ALIGNMENT : \$(cat ${alignment} | grep '>' | wc -l)\\n" >> announce.json
+                echo '"}' >> announce.json
+            """
+}
+
 workflow align_and_variant_call {
     take:
         in_fasta
@@ -357,6 +426,7 @@ workflow align_and_variant_call {
         haplotype_constellations(alignment.out)
         classify_constellations(alignment.out)
         add_constellations_to_metadata(haplotype_constellations.out, classify_constellations.out, category)
+        announce_summary(in_fasta, alignment.out)
     emit:
         mutations = type_AAs_and_dels.out
         constellations = add_constellations_to_metadata.out
