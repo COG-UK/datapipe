@@ -107,7 +107,6 @@ process alignment {
       --samfile ${sam} \
       --reference ${reference_fasta} \
       --pad \
-      --trim \
       -o alignment.fasta
     """
 }
