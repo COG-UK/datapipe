@@ -125,7 +125,11 @@ process add_new_pangolin_lineages_to_metadata {
             if row["taxon"] in lineage_dict:
                 print("%s occurs more than once in lineages input file" % row["taxon"])
                 continue
-            lineage_dict[row["taxon"]] = {"lineage": row["lineage"], "pangoLEARN_version": row["pangoLEARN_version"], "probability": row["probability"]}
+            lineage_dict[row["taxon"]] = {"lineage": row["lineage"], "pangoLEARN_version": row["pangoLEARN_version"]}
+            if "probability" in row:
+                lineage_dict[row["taxon"]]["probability"] = row["probability"]
+            else:
+                lineage_dict[row["taxon"]]["probability"] = "1.0"
 
 
     with open("${metadata}", 'r', newline = '') as csv_in, \
