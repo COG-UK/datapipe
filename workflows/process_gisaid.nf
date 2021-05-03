@@ -3,6 +3,7 @@
 nextflow.preview.dsl = 2
 
 // import modules
+include { start } from '../modules/start.nf'
 include { preprocess_gisaid } from '../modules/preprocess_gisaid.nf'
 include { pangolin } from '../modules/pangolin.nf'
 include { check_for_pangolin_update } from '../modules/pangolin.nf'
@@ -31,6 +32,8 @@ workflow process_gisaid {
 }
 
 workflow {
+    start()
+    
     ch_gisaid_json = Channel.fromPath(params.gisaid_json)
 
     check_for_pangolin_update()

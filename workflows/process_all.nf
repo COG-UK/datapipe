@@ -3,6 +3,7 @@
 nextflow.preview.dsl = 2
 
 // import modules
+include { start } from '../modules/start.nf'
 include { check_for_pangolin_update } from '../modules/pangolin.nf'
 include { process_gisaid } from './process_gisaid.nf'
 include { process_cog_uk } from './process_cog_uk.nf'
@@ -10,6 +11,8 @@ include { publish_cog_global } from './process_cog_uk.nf'
 
 
 workflow {
+    start()
+
     ch_uk_fasta = Channel.fromPath(params.uk_fasta)
     ch_uk_metadata = Channel.fromPath(params.uk_metadata)
     ch_uk_accessions = Channel.fromPath(params.uk_accessions)
