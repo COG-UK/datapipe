@@ -43,8 +43,12 @@ process annotate_with_unmapped_genome_completeness {
                 id = row[id_key]
                 if id in alignment:
                     seq = str(alignment[id].seq)
-                    completeness = float(len(seq.replace("N", "")) / len(seq))
-                    row["unmapped_genome_completeness"] = completeness
+                    if len(seq) == 0:
+                        print(id)
+                        row["unmapped_genome_completeness"] = 0.0
+                    else:
+                        completeness = float(len(seq.replace("N", "")) / len(seq))
+                        row["unmapped_genome_completeness"] = completeness
                     writer.writerow(row)
                 else:
                     row["unmapped_genome_completeness"] = 0.0
