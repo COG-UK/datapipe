@@ -177,14 +177,14 @@ process filter_on_distance_to_WH04 {
     from Bio import SeqIO
     import csv
 
-    reject = []
+    reject = set()
     with open("${distances}", 'r', newline = '') as distances_in:
         reader = csv.DictReader(distances_in, delimiter="\t", quotechar='\"', dialect = "unix")
         for row in reader:
             sequence_name = row['sequence_name']
             distance = float(row['distance_stdevs'])
             if distance >= 4.0:
-                reject.append(sequence_name)
+                reject.add(sequence_name)
 
     alignment = SeqIO.index("${fasta}", "fasta")
 

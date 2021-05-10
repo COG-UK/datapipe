@@ -25,7 +25,7 @@ process minimap2_to_reference {
 
     script:
     """
-    minimap2 -t ${task.cpus} -a -x asm20 ${reference_fasta} ${fasta} > alignment.sam
+    minimap2 -t ${task.cpus} -a --secondary=no -x asm20 ${reference_fasta} ${fasta} > alignment.sam
     """
 }
 
