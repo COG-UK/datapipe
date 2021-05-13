@@ -31,6 +31,11 @@ def parse_args():
 
     return args
 
+def remove_commas(row):
+    for item in row:
+        if "," in row[item]:
+            row[item] = row[item].replace(",","_")
+
 def load_updated_dates(updated_date_file):
     date_dict = {}
     if updated_date_file:
@@ -201,6 +206,7 @@ def main():
 
         for row in reader:
             try:
+                remove_commas(row)
                 add_sample_date(row, date_dict)
                 add_source_id(row)
                 add_pillar_2(row)
