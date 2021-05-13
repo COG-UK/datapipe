@@ -138,6 +138,10 @@ process uk_geography {
     * @params geography_utils
     */
 
+    memory { 1.GB * task.attempt + lineage_fasta.size() * 1.B }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+    maxRetries = 1
+
     publishDir "${publish_dev}/", pattern: "geography/*.csv", mode: 'copy'
     publishDir "${publish_dev}/", pattern: "geography/*.txt", mode: 'copy'
 
