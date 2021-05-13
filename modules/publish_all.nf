@@ -138,7 +138,7 @@ process uk_geography {
     * @params geography_utils
     */
 
-    memory { 1.GB * task.attempt + lineage_fasta.size() * 1.B }
+    memory { 1.GB * task.attempt + uk_fasta.size() * 1.B }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
     maxRetries = 1
 

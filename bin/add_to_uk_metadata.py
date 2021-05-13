@@ -34,7 +34,7 @@ def parse_args():
 def remove_commas(row):
     for item in row:
         if "," in row[item]:
-            row[item] = row[item].replace(",","_")
+            row[item] = row[item] = '"%s"' %row[item]
 
 def load_updated_dates(updated_date_file):
     date_dict = {}
