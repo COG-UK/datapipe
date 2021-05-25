@@ -19,7 +19,7 @@ adm1a_to_country = {"UK-SCT": "Scotland",
                     }
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="""Add sample_date, pillar_2 and sequence_name columns""",
+    parser = argparse.ArgumentParser(description="""Add sample_date, is_pillar_2 and sequence_name columns""",
                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--in-metadata', dest = 'in_metadata', required=True, help='TSV from MAJORA')
     parser.add_argument('--out-metadata', dest = 'out_metadata', required=True, help='CSV to write out')
@@ -61,9 +61,9 @@ def add_source_id(row):
 
 def add_pillar_2(row):
     if row['collection_pillar'] == 2 or row['central_sample_id'][0:4] in ["ALDP", "CAMC", "MILK", "QEUH","RAND"]:
-        row["pillar_2"] = True
+        row["is_pillar_2"] = "Y"
     else:
-        row["pillar_2"] = False
+        row["is_pillar_2"] = "N"
 
 def add_sequence_name(row):
     country = adm1a_to_country[row['adm1']]
@@ -174,12 +174,12 @@ def United_Kingdom_to_UK(row):
     row["adm0"] = row["adm0"].replace("United Kingdom", "UK")
 
 def add_uk_columns(row):
-    row["is_cog_uk"] = True
+    row["is_cog_uk"] = "Y"
     country = adm1a_to_country[row['adm1']]
     if country in ['England', 'Scotland', 'Wales', 'Northern_Ireland']:
-        row["is_uk"] = True
+        row["is_uk"] = "Y"
     else:
-        row["is_uk"] = False
+        row["is_uk"] = "N"
 
 def main():
     args = parse_args()
@@ -190,7 +190,7 @@ def main():
 
     date_dict = load_updated_dates(args.updated_date_file)
     accession_dict = load_accession(args.accession_file, log_handle)
-    new_columns = ["sample_date", "source_id", "pillar_2", "sequence_name", "covv_accession_id", "edin_epi_week", "edin_epi_day", "safe_sample_date", "is_uk", "is_cog_uk", "why_excluded"]
+    new_columns = ["sample_date", "source_id", "is_pillar_2", "sequence_name", "covv_accession_id", "edin_epi_week", "edin_epi_day", "safe_sample_date", "is_uk", "is_cog_uk", "why_excluded"]
 
     with open(args.in_metadata, 'r', newline = '') as csv_in, \
          open(args.out_metadata, 'w', newline = '') as csv_out:

@@ -33,12 +33,12 @@ process combine_cog_gisaid {
           --in-metadata ${uk_metadata} \
           --index-column sequence_name \
           --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
-                          pillar_2 \
-                          sequence_name sample_date safe_sample_date epi_week epi_day \
-                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location is_uk is_cog_uk \
-                          submission_org_code is_surveillance is_community is_hcw \
+                          sequence_name sample_date safe_sample_date epi_week epi_day collection_date received_date published_date \
+                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
+                          is_uk is_cog_uk \
+                          submission_org_code submission_user collection_pillar is_pillar_2 is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
-                          lineage lineage_support lineages_version \
+                          lineage lineage_support lineages_version scorpio_call scorpio_support ambiguity_count \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
                           unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
@@ -53,12 +53,12 @@ process combine_cog_gisaid {
           --in-metadata ${gisaid_metadata} \
           --index-column sequence_name \
           --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
-                          pillar_2 \
-                          sequence_name sample_date safe_sample_date epi_week epi_day \
-                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location is_uk is_cog_uk \
-                          submission_org_code is_surveillance is_community is_hcw \
+                          sequence_name sample_date safe_sample_date epi_week epi_day collection_date received_date published_date \
+                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
+                          is_uk is_cog_uk \
+                          submission_org_code submission_user collection_pillar is_pillar_2 is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
-                          lineage lineage_support lineages_version \
+                          lineage lineage_support lineages_version scorpio_call scorpio_support ambiguity_count \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
                           unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
@@ -208,7 +208,7 @@ process add_geography_to_metadata {
           --index-column sequence_name \
           --join-on sequence_name \
           --force-overwrite \
-          --new-columns adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location \
+          --new-columns adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location utla utla_code suggested_adm2_grouping \
           --out-metadata "cog_gisaid_geography.csv"
     """
 }
