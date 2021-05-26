@@ -32,7 +32,7 @@ process combine_cog_gisaid {
           --in-fasta ${uk_fasta} \
           --in-metadata ${uk_metadata} \
           --index-column sequence_name \
-          --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
+          --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id source_id \
                           sequence_name sample_date safe_sample_date epi_week epi_day collection_date received_date published_date \
                           country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
                           is_uk is_cog_uk \
@@ -52,7 +52,7 @@ process combine_cog_gisaid {
           --in-fasta ${gisaid_fasta} \
           --in-metadata ${gisaid_metadata} \
           --index-column sequence_name \
-          --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id \
+          --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id source_id \
                           sequence_name sample_date safe_sample_date epi_week epi_day collection_date received_date published_date \
                           country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
                           is_uk is_cog_uk \

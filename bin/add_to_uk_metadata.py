@@ -58,6 +58,8 @@ def add_source_id(row):
     row["source_id"] = row["biosample_source_id"]
     if row["root_biosample_source_id"] not in [None,""]:
         row["source_id"] = row["root_biosample_source_id"]
+    if len(row["source_id"]) < 3:
+        row["source_id"] = None
 
 def add_pillar_2(row):
     if row['collection_pillar'] == 2 or row['central_sample_id'][0:4] in ["ALDP", "CAMC", "MILK", "QEUH","RAND"]:
