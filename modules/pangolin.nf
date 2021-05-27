@@ -116,50 +116,10 @@ process add_new_pangolin_lineages_to_metadata {
 
     script:
     """
-    #!/usr/bin/env python3
-    import csv
-
-    lineage_dict = {}
-    with open("${pangolin_csv}", 'r', newline = '') as lineages_in:
-        reader = csv.DictReader(lineages_in, delimiter=",", quotechar='\"', dialect = "unix")
-        for row in reader:
-            if row["taxon"] in lineage_dict:
-                print("%s occurs more than once in lineages input file" % row["taxon"])
-                continue
-            lineage_dict[row["taxon"]] = {"lineage": row["lineage"], "pangoLEARN_version": row["pangoLEARN_version"]}
-            if "probability" in row:
-                lineage_dict[row["taxon"]]["probability"] = row["probability"]
-            else:
-                lineage_dict[row["taxon"]]["probability"] = "1.0"
-
-
-    missing_lineage = 0
-    with open("${metadata}", 'r', newline = '') as csv_in, \
-         open("${metadata.baseName}.with_pangolin.csv", 'w', newline = '') as csv_out:
-
-        reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
-        column_names = reader.fieldnames + [col for col in ["lineage", "pangoLEARN_version", "probability"] if col not in reader.fieldnames]
-        writer = csv.DictWriter(csv_out, fieldnames = column_names, delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
-        writer.writeheader()
-
-        if "fasta_header" in reader.fieldnames:
-            taxon = "fasta_header"
-        else:
-            taxon = "edin_header"
-
-        for row in reader:
-            fasta_header = row[taxon]
-            if fasta_header in lineage_dict:
-                row["lineage"] = lineage_dict[fasta_header]["lineage"]
-                row["pangoLEARN_version"] = lineage_dict[fasta_header]["pangoLEARN_version"]
-                row["probability"] = lineage_dict[fasta_header]["probability"]
-            if "lineage" not in row:
-                missing_lineage += 1
-            elif not row["lineage"]:
-                missing_lineage += 1
-            writer.writerow(row)
-    with open("pango.log", "w") as f:
-        f.write("Number of sequences missing lineage assignments after running pangolin: %i" %missing_lineage)
+    $project_dir/../bin/prepare_for_pangolin.py \
+                  --in-metadata ${metadata} \
+                  --previous-metadata ${pangolin_csv} \
+                  --out-metadata "${metadata.baseName}.with_pangolin.csv"
     """
 }
 
