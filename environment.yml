@@ -16,6 +16,7 @@ dependencies:
   - r-networkd3
   - benjamincjackson::gofasta=v0.0.3
   - s3cmd
+  - usher
   - pip:
       - git+https://github.com/COG-UK/phylo-reports.git
       - git+https://github.com/cov-lineages/pangolin.git
