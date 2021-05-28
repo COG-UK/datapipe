@@ -5,38 +5,21 @@ channels:
   - defaults
   - cov-ert
 dependencies:
-  - biopython
-  - coreutils
-  - minimap2
-  - pip
+  - biopython>=1.74
+  - coreutils>=8.25
+  - minimap2>=2.17
+  - pip>=19.3.1
   - python>=3.6
   - snakemake-minimal
   - nextflow
-  - r-base
-  - r-networkd3
-  - benjamincjackson::gofasta
+  - benjamincjackson::gofasta>=v0.0.3
   - s3cmd
   - usher
   - pip:
-      - git+https://github.com/COG-UK/phylo-reports.git
       - git+https://github.com/cov-lineages/pangolin.git
       - git+https://github.com/cov-lineages/pangoLEARN.git
       - git+https://github.com/cov-ert/datafunk.git
       - git+https://github.com/cov-ert/fastafunk.git
       - git+https://github.com/cov-lineages/constellations.git
       - git+https://github.com/cov-lineages/scorpio.git
-      - matplotlib
-      - numpy
-      - pweave
-      - scipy
-      - tabulate
-      - pandas
-      - requests
-      - epiweeks
-      - argparse
-      - geopandas
-      - shapely
-      - descartes
-      - joypy
-      - pytools
 
