@@ -12,7 +12,7 @@ dependencies:
   - python>=3.6
   - snakemake-minimal
   - nextflow
-  - benjamincjackson::gofasta>=v0.0.3
+  - benjamincjackson::gofasta==v0.0.3
   - s3cmd
   - usher
   - pip:
