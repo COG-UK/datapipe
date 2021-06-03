@@ -208,7 +208,7 @@ process add_geography_to_metadata {
           --index-column sequence_name \
           --join-on sequence_name \
           --force-overwrite \
-          --new-columns adm1 adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location utla utla_code suggested_adm2_grouping \
+          --new-columns adm1 adm1_raw adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location utla utla_code suggested_adm2_grouping \
           --out-metadata "cog_gisaid_geography.csv"
     """
 }
