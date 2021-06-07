@@ -62,7 +62,7 @@ def add_source_id(row):
         row["source_id"] = None
 
 def add_pillar_2(row):
-    if row['collection_pillar'] == 2 or row['central_sample_id'][0:4] in ["ALDP", "CAMC", "MILK", "QEUH","RAND"]:
+    if row['collection_pillar'] in [2,"2"] or row['central_sample_id'][0:4] in ["ALDP", "CAMC", "MILK", "QEUH","RAND"]:
         row["is_pillar_2"] = "Y"
     else:
         row["is_pillar_2"] = "N"
