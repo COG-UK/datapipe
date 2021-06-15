@@ -28,6 +28,12 @@
       "metadata_fields": ["sequence_name"],
       "constellations": true,
       "exclude_cog": true
+    },
+    {
+      "suffix": "pango_designation",
+      "data": "gisaid",
+      "metadata_fields": ["sequence_name","gisaid_accession", "country", "lineage"],
+      "where": "gisaid_accession=covv_accession_id country=edin_admin_0"
     }
   ]
 }
