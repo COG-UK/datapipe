@@ -375,12 +375,17 @@ process publish_s3 {
     * Publishes public files to s3
     * @input fasta, metadata, aligment, unmasked_alignment
     */
+    publishDir "${publish_dev}/", pattern: "s3dir", mode: 'copy'
 
     input:
     path fasta
     path metadata
     path alignment
     path unmasked_alignment
+
+    output:
+    path s3dir
+
 
     script:
     """
@@ -389,9 +394,6 @@ process publish_s3 {
     cp ${metadata} s3dir/cog_metadata.csv
     cp ${alignment} s3dir/cog_alignment.fasta
     cp ${unmasked_alignment} s3dir/cog_unmasked_alignment.fasta
-
-    s3cmd sync s3dir/ s3://cog-uk/phylogenetics/${params.date}/ --acl-public
-    s3cmd sync s3dir/ s3://cog-uk/phylogenetics/latest/ --acl-public
     """
 }
 
