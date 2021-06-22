@@ -36,7 +36,7 @@
     {
       "suffix": "geography",
       "data": "cog_global",
-      "metadata_fields": ["cog_id","sequence_name","sample_date","epi_week","country","adm1","adm2","utla", "utla_code","outer_postcode","adm1_raw","adm2_raw","adm2_source","NUTS1","region","latitude","longitude","location"],
+      "metadata_fields": ["cog_id","sequence_name","sample_date","epi_week","country","adm1","adm2","utla", "utla_code","outer_postcode","adm1_raw","adm2_raw","adm2_source","suggested_adm2_grouping","NUTS1","region","latitude","longitude","location"],
       "where": "cog_id=central_sample_id"
     },
     {
