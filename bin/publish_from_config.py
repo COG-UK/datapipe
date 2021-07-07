@@ -182,7 +182,7 @@ def publish_file(outdir, info_dict):
     if info_dict["constellations"]:
             cmd_list = ["fastafunk add_columns --in-metadata", info_dict["intermediate_csv"],
             "--in-data", info_dict["in_con"], "--index-column sequence_name",
-            "--join-on sequenc e_name --out-metadata tmp.constellations.csv"]
+            "--join-on sequence_name --out-metadata tmp.constellations.csv"]
             info_dict["intermediate_csv"] = "tmp.constellations.csv"
             syscall(cmd_list)
 
