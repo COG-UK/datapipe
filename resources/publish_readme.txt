@@ -11,6 +11,7 @@
 ### Cog
 
 - `cog.insertions.tsv` and `cog.deletions.tsv` containing all found insertions and deletions for the UK sequences
+- `UTLA_genome_counts_<date>.csv` containing counts of delta sequences by date and UTLA
 
 ### Metadata
 
