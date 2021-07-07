@@ -160,10 +160,14 @@ def publish_file(outdir, info_dict):
 
     cmd_list = ["fastafunk fetch --in-fasta", info_dict["in_fa"], "--in-metadata", info_dict["in_csv"],
               "--index-column sequence_name --out-fasta", info_dict["out_fa"],
-              "--out-metadata", info_dict["intermediate_csv"], "--restrict --low-memory --keep-omit-rows"]
+              "--out-metadata", info_dict["intermediate_csv"], "--restrict --low-memory"]
+
     if info_dict["metadata_fields"]:
-            cmd_list.append("--filter-column")
-            cmd_list.extend(info_dict["metadata_fields"])
+        if "why_excluded" in info_dict["metadata_fields"]:
+            cmd_list.append("--keep-omit-rows")
+        cmd_list.append("--filter-column")
+        cmd_list.extend(info_dict["metadata_fields"])
+
     if info_dict["where"]:
         cmd_list.append("--where-column %s" %info_dict["where"])
     syscall(cmd_list)
@@ -178,7 +182,7 @@ def publish_file(outdir, info_dict):
     if info_dict["constellations"]:
             cmd_list = ["fastafunk add_columns --in-metadata", info_dict["intermediate_csv"],
             "--in-data", info_dict["in_con"], "--index-column sequence_name",
-            "--join-on sequence_name --out-metadata tmp.constellations.csv"]
+            "--join-on sequenc e_name --out-metadata tmp.constellations.csv"]
             info_dict["intermediate_csv"] = "tmp.constellations.csv"
             syscall(cmd_list)
 
