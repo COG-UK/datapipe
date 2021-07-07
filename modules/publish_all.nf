@@ -301,6 +301,30 @@ process add_gisaid_geography_to_metadata {
 }
 
 
+process make_delta_by_utla_summary {
+    /**
+    * Summarizes delta counts by utla
+    * @input metadata
+    * @output csv
+    */
+
+    publishDir "${publish_dir}/cog", pattern: "*.csv", mode: 'copy', overwrite: false
+
+    input:
+    path metadata
+
+    output:
+    path "UTLA_genome_counts_${params.date}.csv"
+
+    script:
+    """
+    $project_dir/../bin/summarise_genomes_by_utla.py \
+      --metadata ${metadata} \
+      --date ${params.date}
+    """
+}
+
+
 process split_recipes {
     input:
     path recipes
@@ -479,6 +503,7 @@ workflow publish_cog_global {
         combine_constellations(uk_constellations, gisaid_constellations)
         uk_geography(uk_fasta, uk_metadata)
         add_uk_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
+        make_delta_by_utla_summary(add_uk_geography_to_metadata.out.metadata)
         split_recipes(cog_global_recipes)
         recipe_ch = split_recipes.out.flatten()
         uk_unaligned_fasta.combine(uk_aligned_fasta)
