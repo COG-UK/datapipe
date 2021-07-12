@@ -24,6 +24,7 @@ def parse_args():
 
     parser.add_argument('--mutations', dest = 'mutations', required=False, help='Mutations CSV')
     parser.add_argument('--constellations', dest = 'constellations', required=False, help='Constellations CSV')
+    parser.add_argument('--updown', dest = 'updown', required=False, help='Updown output CSV')
 
     parser.add_argument('--recipes', dest = 'recipes', required=True, help='JSON of recipes')
     parser.add_argument('--date', dest = 'date', required=True, help='Datestamp for published files')
@@ -35,6 +36,8 @@ def parse_args():
 #"fasta": "unaligned", "aligned", "trimmed", "cog_global" or "gisaid"
 #"metadata_fields": []
 #"mutations": True or False to add columns from mutations
+#"constellations": True or False to add columns from constellations
+#"updown": True or False to add columns from updown
 #"shuffle": True to shuffle rows of metadata
 #"where": free text to be passed to fastafunk fetch --where-column
 #"suffix": something to append to file names
@@ -42,13 +45,13 @@ def parse_args():
 #"uk_only": True or False to include only samples from UK from cog_global metadata
 #"drop_index": name of index column that should be dropped at the end
 
-def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, mutations_file, constellations_file):
+def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, mutations_file, constellations_file, updown_file):
     info_dict = {"suffix":None, "data":None, "fasta":None, "metadata_fields":None,
-                 "where": None, "mutations":False, "constellations":False, 
+                 "where": None, "mutations":False, "constellations":False, "updown":False,
                  "shuffle":False, "drop_index": None,
                  "exclude_uk":False, "uk_only": False, "exclude_cog":False, "cog_only": False,
                  "date": date,
-                 "in_fa":None, "in_csv":None, "in_muts":None, "in_con":None,
+                 "in_fa":None, "in_csv":None, "in_muts":None, "in_con":None, "in_up": None,
                  "out_fa":"tmp.fa", "intermediate_csv":"tmp.csv", "out_csv":"tmp.csv"}
     info_dict.update(config_dict)
 
@@ -81,6 +84,7 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, mutati
 
     info_dict["in_muts"] = mutations_file
     info_dict["in_con"] = constellations_file
+    info_dict["in_up"] = updown_file
 
     start = "%s/%s_%s" %(outdir, info_dict["data"], info_dict["date"])
     if info_dict["suffix"]:
@@ -103,7 +107,10 @@ def get_info_from_config(config_dict, outdir, date, fasta_dict, csv_dict, mutati
     if info_dict["mutations"] is not None and info_dict["in_muts"] is None:
         sys.exit("Please provide the appropriate mutations file")
     if info_dict["constellations"] is not None and info_dict["in_con"] is None:
-            sys.exit("Please provide the appropriate mutations file")
+        sys.exit("Please provide the appropriate constellations file")
+    if info_dict["updown"] is not None and info_dict["in_up"] is None:
+        sys.exit("Please provide the appropriate updown file")
+
     print(info_dict)
     return info_dict
 
@@ -180,11 +187,18 @@ def publish_file(outdir, info_dict):
         syscall(cmd_list)
 
     if info_dict["constellations"]:
-            cmd_list = ["fastafunk add_columns --in-metadata", info_dict["intermediate_csv"],
-            "--in-data", info_dict["in_con"], "--index-column sequence_name",
-            "--join-on sequence_name --out-metadata tmp.constellations.csv"]
-            info_dict["intermediate_csv"] = "tmp.constellations.csv"
-            syscall(cmd_list)
+        cmd_list = ["fastafunk add_columns --in-metadata", info_dict["intermediate_csv"],
+        "--in-data", info_dict["in_con"], "--index-column sequence_name",
+        "--join-on sequence_name --out-metadata tmp.constellations.csv"]
+        info_dict["intermediate_csv"] = "tmp.constellations.csv"
+        syscall(cmd_list)
+
+    if info_dict["updown"]:
+        cmd_list = ["fastafunk add_columns --in-metadata", info_dict["intermediate_csv"],
+        "--in-data", info_dict["in_up"], "--index-column sequence_name",
+        "--join-on query --out-metadata tmp.updown.csv"]
+        info_dict["intermediate_csv"] = "tmp.updown.csv"
+        syscall(cmd_list)
 
     if info_dict["drop_index"]:
         cmd_list = ["fastafunk drop_columns --in-metadata", info_dict["intermediate_csv"],
@@ -213,6 +227,8 @@ def main():
     print(mutations_file)
     constellations_file = args.constellations
     print(constellations_file)
+    updown_file = args.updown
+    print(updown_file)
 
     recipes = {}
     with open(args.recipes, 'r') as f:
@@ -221,7 +237,7 @@ def main():
     for outdir in recipes.keys():
         os.makedirs(outdir,exist_ok=True)
         for recipe in recipes[outdir]:
-            info_dict = get_info_from_config(recipe, outdir, args.date, fasta_dict, csv_dict, mutations_file, constellations_file)
+            info_dict = get_info_from_config(recipe, outdir, args.date, fasta_dict, csv_dict, mutations_file, constellations_file, updown_file)
             publish_file(outdir, info_dict)
 
 if __name__ == '__main__':
