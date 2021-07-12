@@ -129,6 +129,29 @@ process combine_constellations {
     """
 }
 
+process combine_updown {
+    /**
+    * Combines updown metadata for COG-UK and GISAID
+    * @input uk_updown gisaid_updown
+    * @output cog_gisaid_updown
+    */
+
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_updown.csv"}
+
+    input:
+    path uk_updown
+    path gisaid_updown
+
+    output:
+    path "cog_gisaid_updown.csv"
+
+    script:
+    """
+    cp ${uk_updown} "cog_gisaid_updown.csv"
+    tail -n+1 ${gisaid_updown} >> "cog_gisaid_updown.csv"
+    """
+}
+
 
 process uk_geography {
     /**
@@ -364,7 +387,7 @@ process publish_cog_global_recipes {
     publishDir "${publish_dir}/", pattern: "README", mode: 'copy', overwrite: false
 
     input:
-    tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(combined_mutations),path(combined_constellations),path(recipe)
+    tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(combined_mutations),path(combined_constellations),path(combined_updown),path(recipe)
 
     output:
     path "${recipe.baseName}.done.txt", emit: flag
@@ -388,6 +411,7 @@ process publish_cog_global_recipes {
       --cog_global_metadata ${combined_metadata} \
       --mutations ${combined_mutations} \
       --constellations ${combined_constellations} \
+      --updown ${combined_updown} \
       --recipes ${recipe} \
       --date ${params.date}
       touch "${recipe.baseName}.done.txt"
@@ -434,7 +458,7 @@ process publish_gisaid_recipes {
     publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
 
     input:
-    tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_mutations),path(gisaid_constellations),path(recipe)
+    tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_mutations),path(gisaid_constellations),path(gisaid_updown),path(recipe)
 
     output:
     path "*/gisaid_*.*", emit: all
@@ -442,6 +466,7 @@ process publish_gisaid_recipes {
     path "*/gisaid_*_global_metadata.csv", optional: true, emit: metadata
     path "*/gisaid_*_global_mutations.csv", optional: true, emit: mutations
     path "*/gisaid_*_global_constellations.csv", optional: true, emit: constellations
+    path "*/gisaid_*_global_updown.csv", optional: true, emit: updown
 
     script:
     """
@@ -451,7 +476,8 @@ process publish_gisaid_recipes {
       --gisaid_fasta ${gisaid_fasta} \
       --gisaid_metadata ${gisaid_metadata} \
       --mutations ${gisaid_mutations} \
-      --constellations ${gisaid_constellations}
+      --constellations ${gisaid_constellations} \
+      --updown ${gisaid_updown}
     """
 }
 
@@ -493,14 +519,17 @@ workflow publish_cog_global {
         uk_metadata
         uk_mutations
         uk_constellations
+        uk_updown
         gisaid_fasta
         gisaid_metadata
         gisaid_mutations
         gisaid_constellations
+        gisaid_updown
     main:
         combine_cog_gisaid(uk_fasta, uk_metadata, gisaid_fasta, gisaid_metadata)
         combine_mutations(uk_mutations, gisaid_mutations)
         combine_constellations(uk_constellations, gisaid_constellations)
+        combine_updown(uk_updown, gisaid_updown)
         uk_geography(uk_fasta, uk_metadata)
         add_uk_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
         make_delta_by_utla_summary(add_uk_geography_to_metadata.out.metadata)
@@ -513,6 +542,7 @@ workflow publish_cog_global {
                           .combine(add_uk_geography_to_metadata.out.metadata)
                           .combine(combine_mutations.out)
                           .combine(combine_constellations.out)
+                          .combine(combine_updown.out)
                           .combine(recipe_ch)
                           .set{ publish_input_ch }
         publish_cog_global_recipes(publish_input_ch)
@@ -531,6 +561,7 @@ workflow publish_gisaid {
         gisaid_metadata
         gisaid_mutations
         gisaid_constellations
+        gisaid_updown
     main:
         if ( params.geography ){
             gisaid_geography(gisaid_fasta, gisaid_metadata)
@@ -544,6 +575,7 @@ workflow publish_gisaid {
         gisaid_fasta.combine(new_gisaid_metadata)
                     .combine(gisaid_mutations)
                     .combine(gisaid_constellations)
+                    .combine(gisaid_updown)
                     .combine(recipe_ch)
                     .set{ publish_input_ch }
         publish_gisaid_recipes(publish_input_ch)
@@ -553,6 +585,7 @@ workflow publish_gisaid {
         metadata = publish_gisaid_recipes.out.metadata
         mutations = publish_gisaid_recipes.out.mutations
         constellations = publish_gisaid_recipes.out.constellations
+        updown = publish_gisaid_recipes.out.updown
         published = outputs_ch
 }
 
@@ -564,11 +597,13 @@ workflow {
     uk_metadata = Channel.fromPath(params.uk_metadata)
     uk_mutations = Channel.fromPath(params.uk_mutations)
     uk_constellations = Channel.fromPath(params.uk_constellations)
+    uk_updown = Channel.fromPath(params.uk_updown)
 
     gisaid_fasta = Channel.fromPath(params.gisaid_fasta)
     gisaid_metadata = Channel.fromPath(params.gisaid_metadata)
     gisaid_mutations = Channel.fromPath(params.gisaid_mutations)
     gisaid_constellations = Channel.fromPath(params.gisaid_constellations)
+    gisaid_updown = Channel.fromPath(params.gisaid_updown)
 
     publish_all(uk_unaligned_fasta,
                    uk_aligned_fasta,
@@ -576,8 +611,10 @@ workflow {
                    uk_metadata,
                    uk_mutations,
                    uk_constellations,
+                   uk_updown,
                    gisaid_fasta,
                    gisaid_metadata,
                    gisaid_mutations,
-                   gisaid_constellations)
+                   gisaid_constellations,
+                   gisaid_updown)
 }

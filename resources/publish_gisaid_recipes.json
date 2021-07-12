@@ -30,6 +30,13 @@
       "exclude_cog": true
     },
     {
+      "suffix": "global_updown",
+      "data": "gisaid",
+      "metadata_fields": ["sequence_name"],
+      "updown": true,
+      "exclude_cog": true
+    },
+    {
       "suffix": "pango_designation",
       "data": "gisaid",
       "metadata_fields": ["sequence_name","gisaid_accession", "country", "lineage"],

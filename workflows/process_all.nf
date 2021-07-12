@@ -31,8 +31,10 @@ workflow {
                         process_cog_uk.out.metadata,
                         process_cog_uk.out.mutations,
                         process_cog_uk.out.constellations,
+                        process_cog_uk.out.updown,
                         process_gisaid.out.fasta,
                         process_gisaid.out.metadata,
                         process_gisaid.out.mutations,
-                        process_gisaid.out.constellations)
+                        process_gisaid.out.constellations,
+                        process_gisaid.out.updown)
 }

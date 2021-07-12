@@ -136,6 +136,30 @@ process get_snps {
     """
 }
 
+process get_updown {
+    /**
+    * Call SNPs in each genome
+    * @input alignment
+    * @output updown list
+    * @params reference_fasta
+    */
+
+    publishDir "${publish_dev}", pattern: "*/*.csv", mode: 'copy'
+
+    input:
+    path alignment
+    val category
+
+    output:
+    path "${category}/${category}.updown.csv"
+
+    script:
+    """
+    mkdir -p ${category}
+    gofasta updown list -r ${WH04_fasta} -q ${alignment} -o ${category}/${category}.updown.csv
+    """
+}
+
 process type_AAs_and_dels {
     /**
     * Adds a column to metadata table for specific dels and aas looked for
@@ -420,6 +444,7 @@ workflow align_and_variant_call {
         get_indels(minimap2_to_reference.out, category)
         alignment(minimap2_to_reference.out)
         get_snps(alignment.out, category)
+        get_updown(alignment.out, category)
         type_AAs_and_dels(alignment.out, get_mutations.out, category)
         get_nuc_mutations(get_snps.out, get_indels.out.deletions, get_indels.out.insertions)
         add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
@@ -432,6 +457,7 @@ workflow align_and_variant_call {
         constellations = add_constellations_to_metadata.out
         fasta = alignment.out
         metadata = add_nucleotide_mutations_to_metadata.out
+        updown = get_updown.out
 }
 
 
@@ -439,6 +465,7 @@ aas = file(params.aas)
 dels = file(params.dels)
 reference_fasta = file(params.reference_fasta)
 reference_genbank = file(params.reference_genbank)
+WH04_fasta = file(params.WH04_fasta)
 constellations = file(params.constellations)
 
 workflow {

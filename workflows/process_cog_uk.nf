@@ -31,6 +31,7 @@ workflow process_cog_uk {
       metadata = filter_and_trim_cog_uk.out.metadata
       mutations = align_and_variant_call.out.mutations
       constellations = align_and_variant_call.out.constellations
+      updown = align_and_variant_call.out.updown
 }
 
 workflow {

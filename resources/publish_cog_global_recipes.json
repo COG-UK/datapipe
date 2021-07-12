@@ -85,5 +85,21 @@
       "data": "cog",
       "fasta": "aligned"
     }
+  ],
+  "civet3": [
+    {
+      "suffix": "private",
+      "fasta": "cog_global",
+      "metadata_fields": ["central_sample_id","sequence_name","secondary_identifier","sample_date","epi_week","country","adm1","adm2","suggested_adm2_grouping","outer_postcode","is_surveillance","is_travel_history","travel_history","lineage","uk_lineage","del_lineage","phylotype","why_excluded","is_excluded"],
+      "where": "epi_week=edin_epi_week adm1=adm1_UK"
+    },
+    {
+      "suffix": "mutations",
+      "data": "cog_global",
+      "updown": true,
+      "metadata_fields": ["sequence_name", "query"],
+      "where": "query=sequence_name",
+      "drop_index": "sequence_name"
+    }
   ]
 }

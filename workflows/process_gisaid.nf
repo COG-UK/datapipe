@@ -23,12 +23,13 @@ workflow process_gisaid {
       deduplicate_gisaid(preprocess_gisaid.out.fasta, pangolin.out.metadata)
       align_and_variant_call(deduplicate_gisaid.out.fasta, deduplicate_gisaid.out.metadata, "gisaid")
       filter_and_trim_gisaid(align_and_variant_call.out.fasta, align_and_variant_call.out.metadata)
-      publish_gisaid(filter_and_trim_gisaid.out.fasta, filter_and_trim_gisaid.out.metadata, align_and_variant_call.out.mutations, align_and_variant_call.out.constellations)
+      publish_gisaid(filter_and_trim_gisaid.out.fasta, filter_and_trim_gisaid.out.metadata, align_and_variant_call.out.mutations, align_and_variant_call.out.constellations, align_and_variant_call.out.updown)
     emit:
       fasta = publish_gisaid.out.fasta
       metadata = publish_gisaid.out.metadata
       mutations = publish_gisaid.out.mutations
       constellations = publish_gisaid.out.constellations
+      updown = publish_gisaid.out.updown
 }
 
 workflow {
