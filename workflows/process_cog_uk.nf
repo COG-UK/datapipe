@@ -51,6 +51,7 @@ workflow {
     ch_gisaid_metadata = Channel.fromPath(params.gisaid_metadata)
     ch_gisaid_mutations = Channel.fromPath(params.gisaid_mutations)
     ch_gisaid_constellations = Channel.fromPath(params.gisaid_constellations)
+    ch_gisaid_updown = Channel.fromPath(params.gisaid_updown)
 
     publish_cog_global(process_cog_uk.out.unaligned_fasta,
                         process_cog_uk.out.aligned_fasta,
@@ -58,8 +59,10 @@ workflow {
                         process_cog_uk.out.metadata,
                         process_cog_uk.out.mutations,
                         process_cog_uk.out.constellations,
+                        process_cog_uk.out.updown,
                         ch_gisaid_fasta,
                         ch_gisaid_metadata,
                         ch_gisaid_mutations,
-                        ch_gisaid_constellations)
+                        ch_gisaid_constellations,
+                        ch_gisaid_updown)
 }
