@@ -29,5 +29,8 @@
 - `cog_<date>_alignment.fa` : filtered, trimmed alignment with sequences matching those in the corresponding metadata
 - `cog_<date>_metadata.csv` : corresponding metadata for filtered, trimmed alignment with the following columns `"sequence_name", "country","adm1","is_pillar_2","sample_date", "epi_week","lineage","lineages_version"`
 
-
+### Civet3
+- `cog_global_<date>_private_alignment.fa` : masked, trimmed, filtered alignment of COG and GLOBAL sequences
+- `cog_global_<date>_private_metadata.csv` : corresponding metadata with the following columns `"sequence_name","gisaid_id","cog_id","source_id","sample_date","epi_week","country","adm1","adm2","suggested_adm2_grouping","outer_postcode","is_surveillance","is_travel_history","travel_history","is_pillar_2","collection_pillar","lineage","lineages_version","scorpio_call"`
+- `cog_global_<date>_mutations.csv` : metadata file produced by gofasta updown list, providing information about nucleotide mutations and ambiguous regions in aligned sequences
 
