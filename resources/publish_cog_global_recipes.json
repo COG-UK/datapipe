@@ -4,7 +4,7 @@
       "suffix": "all",
       "data": "cog",
       "fasta": "unaligned",
-      "metadata_fields": ["country","adm1","adm2","outer_postcode","biosample_source_id","central_sample_id","collected_by","collection_date","end_time","flowcell_id","flowcell_type","instrument_make","instrument_model","is_surveillance","layout_insert_length","layout_read_length","library_adaptor_barcode","library_layout_config","library_name","library_primers","library_protocol","library_selection","library_seq_kit","library_seq_protocol","library_source","library_strategy","meta.artic.primers","meta.artic.protocol","meta.epi.cluster","meta.investigation.cluster","meta.investigation.name","meta.investigation.site","metric.ct.1.ct_value","metric.ct.1.test_kit","metric.ct.1.test_platform","metric.ct.1.test_target","metric.ct.2.ct_value","metric.ct.2.test_kit","metric.ct.2.test_platform","metric.ct.2.test_target","metric.ct.max_ct","metric.ct.min_ct","metric.ct.num_tests","published_as","received_date","root_sample_id","run_group","run_name","sample_type_collected","sample_type_received","secondary_accession","secondary_identifier","sequencing_org","sequencing_org_code","sequencing_submission_date","sequencing_uuid","source_age","source_sex","start_time","submission_org","submission_org_code","submission_user","swab_site","header","sequence_name","unmapped_genome_completeness","cov_id","sample_date","why_excluded","epi_week", "lineage", "lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict"],
+      "metadata_fields": ["country","adm1","adm2","outer_postcode","biosample_source_id","source_id","central_sample_id","collected_by","collection_date","end_time","flowcell_id","flowcell_type","instrument_make","instrument_model","is_surveillance","layout_insert_length","layout_read_length","library_adaptor_barcode","library_layout_config","library_name","library_primers","library_protocol","library_selection","library_seq_kit","library_seq_protocol","library_source","library_strategy","meta.artic.primers","meta.artic.protocol","meta.epi.cluster","meta.investigation.cluster","meta.investigation.name","meta.investigation.site","metric.ct.1.ct_value","metric.ct.1.test_kit","metric.ct.1.test_platform","metric.ct.1.test_target","metric.ct.2.ct_value","metric.ct.2.test_kit","metric.ct.2.test_platform","metric.ct.2.test_target","metric.ct.max_ct","metric.ct.min_ct","metric.ct.num_tests","published_as","received_date","root_sample_id","run_group","run_name","sample_type_collected","sample_type_received","secondary_accession","secondary_identifier","sequencing_org","sequencing_org_code","sequencing_submission_date","sequencing_uuid","source_age","source_sex","start_time","submission_org","submission_org_code","submission_user","swab_site","header","sequence_name","unmapped_genome_completeness","cov_id","sample_date","why_excluded","epi_week", "lineage", "lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict"],
       "mutations": true,
       "where": "epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private"
     },
@@ -15,7 +15,7 @@
     },
     {
       "fasta": "trimmed",
-      "metadata_fields": ["sequence_name", "secondary_identifier", "sample_date", "epi_week", "country", "adm1", "adm2", "outer_postcode", "is_surveillance", "is_community", "is_hcw", "is_travel_history", "travel_history", "lineage", "lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict"],
+      "metadata_fields": ["sequence_name", "secondary_identifier","source_id","sample_date", "epi_week", "country", "adm1", "adm2", "outer_postcode", "is_surveillance", "is_community", "is_hcw", "is_travel_history", "travel_history", "lineage", "lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict"],
       "where": "epi_week=edin_epi_week country=adm0 outer_postcode=adm2_private"
     }
   ],
@@ -29,7 +29,7 @@
     {
       "suffix": "consortium",
       "data": "cog_global",
-      "metadata_fields": ["sequence_name","cog_id","gisaid_id","sample_date","received_date", "collection_date", "published_date","epi_week","sequencing_org_code","submission_org_code","submission_user","root_sample_id","country","adm1","adm2","outer_postcode","adm2_raw","adm2_source","NUTS1","region","latitude","longitude","location","utla","utla_code","suggested_adm2_grouping","source_age","source_sex","sample_type_collected","sample_type_received","swab_site","ct_n_ct_value","ct_n_test_kit","ct_n_test_platform","ct_n_test_target","collection_pillar", "is_pillar_2","is_surveillance","is_travel_history","travel_history","lineage","lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict"],
+      "metadata_fields": ["sequence_name","cog_id","gisaid_id","source_id","sample_date","received_date", "collection_date", "published_date","epi_week","sequencing_org_code","submission_org_code","submission_user","root_sample_id","country","adm1","adm2","outer_postcode","adm2_raw","adm2_source","NUTS1","region","latitude","longitude","location","utla","utla_code","suggested_adm2_grouping","source_age","source_sex","sample_type_collected","sample_type_received","swab_site","ct_n_ct_value","ct_n_test_kit","ct_n_test_platform","ct_n_test_target","collection_pillar", "is_pillar_2","is_surveillance","is_travel_history","travel_history","lineage","lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict"],
       "where": "gisaid_id=covv_accession_id cog_id=central_sample_id",
       "mutations": true
     },
@@ -90,8 +90,8 @@
     {
       "suffix": "private",
       "fasta": "cog_global",
-      "metadata_fields": ["central_sample_id","sequence_name","secondary_identifier","sample_date","epi_week","country","adm1","adm2","suggested_adm2_grouping","outer_postcode","is_surveillance","is_travel_history","travel_history","lineage","uk_lineage","del_lineage","phylotype","why_excluded","is_excluded"],
-      "where": "epi_week=edin_epi_week adm1=adm1_UK"
+      "metadata_fields": ["sequence_name","gisaid_id","cog_id","source_id","sample_date","epi_week","country","adm1","adm2","suggested_adm2_grouping","outer_postcode","is_surveillance","is_travel_history","travel_history","is_pillar_2","collection_pillar","lineage","lineages_version","scorpio_call"],
+      "where": "gisaid_id=covv_accession_id cog_id=central_sample_id epi_week=edin_epi_week adm1=adm1_UK"
     },
     {
       "suffix": "mutations",
