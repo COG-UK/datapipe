@@ -92,11 +92,19 @@ process run_pangolin {
     path "pangolin/lineage_report.csv"
 
     script:
-    """
-    pangolin "${fasta}" \
-        --outdir pangolin \
-        --tempdir pangolin_tmp
-    """
+    if (params.skip_designation_hash)
+        """
+        pangolin "${fasta}" \
+            --outdir pangolin \
+            --tempdir pangolin_tmp \
+            --skip-designation-hash
+        """
+    else
+        """
+        pangolin "${fasta}" \
+            --outdir pangolin \
+            --tempdir pangolin_tmp
+        """
 }
 
 process add_new_pangolin_lineages_to_metadata {

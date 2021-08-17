@@ -68,14 +68,25 @@ def prepare_for_pangolin(in_fasta, in_metadata, previous_metadata, out_fasta, ou
 
         reader = csv.DictReader(csv_in, delimiter=",", quotechar='\"', dialect = "unix")
         fieldnames = reader.fieldnames
+        print(fieldnames, len(fieldnames))
+        if len(fieldnames) <= 1:
+            csv_in.close()
+            csv_in = open(in_metadata, 'r', newline = '')
+            reader = csv.DictReader(csv_in, delimiter="\t", quotechar='\"', dialect = "unix")
+            fieldnames = reader.fieldnames
         fieldnames.extend([key for key in keys if key not in fieldnames])
         writer = csv.DictWriter(csv_out, fieldnames = fieldnames, delimiter=",", quotechar='\"', quoting=csv.QUOTE_MINIMAL, dialect = "unix")
         writer.writeheader()
 
+        taxon = "taxon"
         if "fasta_header" in reader.fieldnames:
             taxon = "fasta_header"
         elif "edin_header" in reader.fieldnames:
             taxon = "edin_header"
+        elif "sequence_name" in reader.fieldnames:
+            taxon = "sequence_name"
+        print(taxon)
+        print(reader.fieldnames)
 
         missing_lineage = 0
 
