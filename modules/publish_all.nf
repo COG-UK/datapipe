@@ -387,6 +387,10 @@ process publish_cog_global_recipes {
     publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
     publishDir "${publish_dir}/", pattern: "README", mode: 'copy', overwrite: false
 
+    memory {4.GB * task.attempt}
+    errorStrategy = { 'retry' }
+    maxRetries 3
+
     input:
     tuple path(uk_unaligned_fasta),path(uk_aligned_fasta),path(uk_trimmed_fasta),path(combined_fasta),path(uk_metadata),path(combined_metadata),path(combined_mutations),path(combined_constellations),path(combined_updown),path(recipe)
 
@@ -457,6 +461,10 @@ process publish_gisaid_recipes {
     */
 
     publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
+
+    memory {4.GB * task.attempt}
+    errorStrategy = { 'retry' }
+    maxRetries 3
 
     input:
     tuple path(gisaid_fasta),path(gisaid_metadata),path(gisaid_mutations),path(gisaid_constellations),path(gisaid_updown),path(recipe)
