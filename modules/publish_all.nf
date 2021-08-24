@@ -147,8 +147,9 @@ process combine_updown {
 
     script:
     """
-    cp ${uk_updown} "cog_gisaid_updown.csv"
-    tail -n+1 ${gisaid_updown} >> "cog_gisaid_updown.csv"
+    cp ${uk_updown} tmp.csv
+    tail -n+1 ${gisaid_updown} >> tmp.csv
+    grep -v ",,,," tmp.csv > "cog_gisaid_updown.csv"
     """
 }
 
