@@ -439,23 +439,29 @@ workflow align_and_variant_call {
         in_metadata
         category
     main:
-        minimap2_to_reference(in_fasta)
-        get_mutations(minimap2_to_reference.out, category)
-        get_indels(minimap2_to_reference.out, category)
+        in_fasta.splitFasta( by: params.chunk_size, file: true ).set{ fasta_chunks }
+        minimap2_to_reference(fasta_chunks)
         alignment(minimap2_to_reference.out)
-        get_snps(alignment.out, category)
-        get_updown(alignment.out, category)
-        type_AAs_and_dels(alignment.out, get_mutations.out, category)
+        alignment.out.collectFile(newLine: false).set{ alignment_result }
+        minimap2_to_reference.out.collectFile(newLine: false, keepHeader: true, skip: 2).set{ mapped_result }
+
+
+        get_mutations(mapped_result, category)
+        get_indels(mapped_result, category)
+
+        get_snps(alignment_result, category)
+        get_updown(alignment_result, category)
+        type_AAs_and_dels(alignment_result, get_mutations.out, category)
         get_nuc_mutations(get_snps.out, get_indels.out.deletions, get_indels.out.insertions)
         add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
-        haplotype_constellations(alignment.out)
-        classify_constellations(alignment.out)
+        haplotype_constellations(alignment_result)
+        classify_constellations(alignment_result)
         add_constellations_to_metadata(haplotype_constellations.out, classify_constellations.out, category)
-        announce_summary(in_fasta, alignment.out)
+        announce_summary(in_fasta, alignment_result)
     emit:
         mutations = type_AAs_and_dels.out
         constellations = add_constellations_to_metadata.out
-        fasta = alignment.out
+        fasta = alignment_result
         metadata = add_nucleotide_mutations_to_metadata.out
         updown = get_updown.out
 }
