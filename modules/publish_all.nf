@@ -387,7 +387,7 @@ process publish_cog_global_recipes {
     publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
     publishDir "${publish_dir}/", pattern: "README", mode: 'copy', overwrite: false
 
-    memory {4.GB * task.attempt}
+    memory {8.GB * task.attempt}
     errorStrategy = { 'retry' }
     maxRetries 3
 
@@ -462,7 +462,7 @@ process publish_gisaid_recipes {
 
     publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
 
-    memory {4.GB * task.attempt}
+    memory {8.GB * task.attempt}
     errorStrategy = { 'retry' }
     maxRetries 3
 
