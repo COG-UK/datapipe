@@ -447,7 +447,6 @@ process publish_s3 {
     cp ${metadata} s3dir/cog_metadata.csv
     cp ${alignment} s3dir/cog_alignment.fasta
     cp ${unmasked_alignment} s3dir/cog_unmasked_alignment.fasta
-    gzip -k s3dir/cog_*
     """
 }
 
