@@ -244,10 +244,19 @@ workflow filter_and_trim_cog_uk {
     main:
         filter_low_coverage_sequences(uk_fasta, uk_metadata)
         trim_alignment(filter_low_coverage_sequences.out.fasta_updated)
-        publish_master_metadata(filter_low_coverage_sequences.out.metadata_updated, "cog")
+        if ( params.distance_qc ){
+            distance_QC(trim_alignment.out, filter_low_coverage_sequences.out.metadata_updated, "cog")
+            filter_on_distance_to_WH04(uk_fasta, uk_metadata, distance_QC.out)
+            ch_fasta = filter_on_distance_to_WH04.out.fasta
+            ch_metadata = filter_on_distance_to_WH04.out.metadata
+        } else {
+            ch_fasta = trim_alignment.out
+            ch_metadata = filter_low_coverage_sequences.out.metadata_updated
+        }
+        publish_master_metadata(ch_metadata, "cog")
     emit:
-        fasta = trim_alignment.out
-        metadata = filter_low_coverage_sequences.out.metadata_updated
+        fasta = ch_fasta
+        metadata = ch_metadata
 }
 
 workflow {
