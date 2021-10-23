@@ -74,6 +74,12 @@ process extract_sequences_for_pangolin {
               --previous-metadata ${params.previous_metadata} \
               --out-fasta "${fasta.baseName}.for_pangolin.fa" \
               --out-metadata "${metadata.baseName}.with_previous.csv"
+            if [[ \$(cat "${metadata}" | wc -l) != \$(cat "${metadata.baseName}.with_previous.csv" | wc -l) ]]
+            then
+                echo \$(cat "${metadata}" | wc -l)
+                echo \$(cat "${metadata.baseName}.with_previous.csv" | wc -l)
+                exit 1
+            fi
         fi
         """
 }

@@ -192,6 +192,12 @@ process type_AAs_and_dels {
     sed "s/query/sequence_name/g" "mutations.tmp.csv" > mutations.tmp2.csv
     sed "s/variants/mutations/g" "mutations.tmp2.csv" > ${category}/${category}_mutations.csv
 
+    if [[ \$(cat "${metadata}" | wc -l) != \$(cat "${category}/${category}_mutations.csv" | wc -l) ]]
+        then
+            echo \$(cat "${metadata}" | wc -l)
+            echo \$(cat "${category}/${category}_mutations.csv" | wc -l)
+            exit 1
+        fi
     """
 }
 
@@ -315,6 +321,13 @@ process add_nucleotide_mutations_to_metadata {
           --join-on sequence_name \
           --new-columns nucleotide_mutations \
           --out-metadata "${metadata.baseName}.with_nuc_mutations.csv"
+
+    if [[ \$(cat "${metadata}" | wc -l) != \$(cat "${metadata.baseName}.with_nuc_mutations.csv" | wc -l) ]]
+        then
+            echo \$(cat "${metadata}" | wc -l)
+            echo \$(cat "${metadata.baseName}.with_nuc_mutations.csv" | wc -l)
+            exit 1
+        fi
     """
 }
 
@@ -340,6 +353,13 @@ process haplotype_constellations {
       --output "${alignment.baseName}.haplotyped.csv" \
       --output-counts \
       --constellations ${constellations}/*.json
+
+    if [[ \$(grep ">" "${alignment}" | wc -l) != \$(tail -n+2 "${alignment.baseName}.haplotyped.csv" | wc -l) ]]
+            then
+                echo \$(grep ">" "${alignment}" | wc -l)
+                echo \$(tail -n+2 "${alignment.baseName}.haplotyped.csv" | wc -l)
+                exit 1
+            fi
     """
 }
 
@@ -363,6 +383,13 @@ process classify_constellations {
       --input ${alignment} \
       --output "${alignment.baseName}.classified.csv" \
       --constellations ${constellations}/*.json
+
+    if [[ \$(grep ">" "${alignment}" | wc -l) != \$(tail -n+2 "${alignment.baseName}.classified.csv" | wc -l) ]]
+                then
+                    echo \$(grep ">" "${alignment}" | wc -l)
+                    echo \$(tail -n+2 "${alignment.baseName}.classified.csv" | wc -l)
+                    exit 1
+                fi
     """
 }
 
@@ -393,6 +420,13 @@ process add_constellations_to_metadata {
           --join-on query \
           --out-metadata "constellations.tmp.csv"
     sed "s/query/sequence_name/g" "constellations.tmp.csv" > "${category}/${category}_constellations.csv"
+
+    if [[ \$(cat "${haplotyped}" | wc -l) != \$(cat "${category}/${category}_constellations.csv" | wc -l) ]]
+            then
+                echo \$(cat "${haplotyped}" | wc -l)
+                echo \$(cat "${category}/${category}_constellations.csv" | wc -l)
+                exit 1
+            fi
     """
 }
 
@@ -454,9 +488,13 @@ workflow align_and_variant_call {
         type_AAs_and_dels(alignment_result, get_mutations.out, category)
         get_nuc_mutations(get_snps.out, get_indels.out.deletions, get_indels.out.insertions)
         add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
-        haplotype_constellations(alignment_result)
-        classify_constellations(alignment_result)
-        add_constellations_to_metadata(haplotype_constellations.out, classify_constellations.out, category)
+
+        haplotype_constellations(alignment.out)
+        haplotype_constellations.out.collectFile(newLine: false).set{ haplotype_result }
+        classify_constellations(alignment.out)
+        classify_constellations.out.collectFile(newLine: false).set{ classify_result }
+
+        add_constellations_to_metadata(haplotype_result, classify_result, category)
         announce_summary(in_fasta, alignment_result)
     emit:
         mutations = type_AAs_and_dels.out
