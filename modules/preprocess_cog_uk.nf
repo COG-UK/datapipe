@@ -22,18 +22,21 @@ process uk_strip_header_digits_and_unalign {
     """
     #!/usr/bin/env python3
     from Bio import SeqIO
+    import re
+    def is_iupac(strg, search=re.compile(r'[^ACGTRYSWKMBDHVNacgtryswkmbdhvn-]').search):
+        return not bool(search(strg))
 
     fasta_in = SeqIO.parse("${uk_fasta}", "fasta")
     with open("${uk_fasta.baseName}.header_stripped.fasta", 'w') as f:
         for record in fasta_in:
+            if not is_iupac(str(record.seq)):
+                continue
             ID = record.description.split("|")[0]
             f.write(">" + ID + "\\n")
             seq = str(record.seq).replace('-','')
-            seq = seq.replace('?','N')
             f.write(seq + "\\n")
     """
 }
-
 
 process uk_add_columns_to_metadata {
     /**
@@ -107,6 +110,11 @@ process uk_filter_omitted_sequences {
                     writer.writerow(row)
                     continue
 
+                if row["fasta_header"] not in alignment:
+                    row["why_excluded"] = "sequences was missing from input or contained non-IUPAC characters"
+                    writer.writerow(row)
+                    continue
+
                 record = alignment[row["fasta_header"]]
                 writer.writerow(row)
                 fasta_out.write(">" + record.id + "\\n")
@@ -166,6 +174,11 @@ process uk_filter_on_sample_date {
 
                 if (todays_date - window) > date:
                     row["why_excluded"] = "sample_date older than %s days" %window
+                    writer.writerow(row)
+                    continue
+
+                if row["fasta_header"] not in indexed_fasdta:
+                    row["why_excluded"] = "sequences was missing from input or contained non-IUPAC characters"
                     writer.writerow(row)
                     continue
 
