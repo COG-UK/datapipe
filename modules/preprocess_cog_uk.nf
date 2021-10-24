@@ -29,6 +29,7 @@ process uk_strip_header_digits_and_unalign {
             ID = record.description.split("|")[0]
             f.write(">" + ID + "\\n")
             seq = str(record.seq).replace('-','')
+            seq = seq.replace('?','N')
             f.write(seq + "\\n")
     """
 }
