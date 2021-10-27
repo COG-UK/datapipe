@@ -120,6 +120,8 @@ process run_pangolin_usher {
     * @output pangolin_fasta
     */
 
+    cpus 4
+
     input:
     path fasta
 
@@ -133,6 +135,7 @@ process run_pangolin_usher {
             --outdir pangolin \
             --tempdir pangolin_tmp \
             --usher \
+            -t ${task.cpus} \
             --skip-designation-hash
         """
     else
@@ -140,7 +143,8 @@ process run_pangolin_usher {
         pangolin "${fasta}" \
             --outdir pangolin \
             --tempdir pangolin_tmp \
-            --usher
+            --usher \
+            -t ${task.cpus}
         """
 }
 
