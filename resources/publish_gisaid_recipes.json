@@ -39,8 +39,8 @@
     {
       "suffix": "pango_designation",
       "data": "gisaid",
-      "metadata_fields": ["sequence_name","gisaid_accession", "country", "lineage"],
-      "where": "gisaid_accession=covv_accession_id country=edin_admin_0"
+      "metadata_fields": ["sequence_name","gisaid_accession", "lineage", "lineages_version", "usher_lineage", "usher_lineages_version"],
+      "where": "gisaid_accession=covv_accession_id"
     }
   ]
 }

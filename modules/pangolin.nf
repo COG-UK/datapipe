@@ -113,6 +113,37 @@ process run_pangolin {
         """
 }
 
+process run_pangolin_usher {
+    /**
+    * Runs PANGOLIN on input fasta
+    * @input fasta
+    * @output pangolin_fasta
+    */
+
+    input:
+    path fasta
+
+    output:
+    path "pangolin/lineage_report.csv"
+
+    script:
+    if (params.skip_designation_hash)
+        """
+        pangolin "${fasta}" \
+            --outdir pangolin \
+            --tempdir pangolin_tmp \
+            --usher \
+            --skip-designation-hash
+        """
+    else
+        """
+        pangolin "${fasta}" \
+            --outdir pangolin \
+            --tempdir pangolin_tmp \
+            --usher
+        """
+}
+
 process add_new_pangolin_lineages_to_metadata {
     /**
     * Updates metadata with new PANGOLIN lineage assignments
@@ -134,6 +165,44 @@ process add_new_pangolin_lineages_to_metadata {
                   --in-metadata ${metadata} \
                   --previous-metadata ${pangolin_csv} \
                   --out-metadata "${metadata.baseName}.with_pangolin.csv"
+    """
+}
+
+process add_pangolin_usher_to_metadata {
+    /**
+    * Adds usher pangolin calls to metadata
+    * @input metadata, usher report
+    * @output metadata
+    */
+
+    input:
+    path metadata
+    path usher_report
+
+    output:
+    path "${metadata.baseName}.with_usher.csv"
+
+    script:
+    """
+    if [[ \$(head -n1 ${metadata}) == *"fasta_header"* ]]; then
+        fastafunk add_columns \
+          --in-metadata ${metadata} \
+          --in-data ${usher_report} \
+          --index-column fasta_header \
+          --join-on taxon \
+          --new-columns usher_lineage usher_lineages_version \
+          --where-column usher_lineage=lineage usher_lineages_version=version \
+          --out-metadata "${metadata.baseName}.with_usher.csv"
+    else
+        fastafunk add_columns \
+          --in-metadata ${metadata} \
+          --in-data ${usher_report} \
+          --index-column edin_header \
+          --join-on taxon \
+          --new-columns usher_lineage usher_lineages_version \
+          --where-column usher_lineage=lineage usher_lineages_version=version \
+          --out-metadata "${metadata.baseName}.with_usher.csv"
+    fi
     """
 }
 
@@ -187,9 +256,19 @@ workflow pangolin {
         run_pangolin.out.collectFile(newLine: true, keepHeader: true, skip: 1)
                         .set{ pangolin_result }
         add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, pangolin_result)
+        if (params.add_usher_pangolin) {
+            run_pangolin_usher(pangolin_chunks)
+            run_pangolin_usher.out.collectFile(newLine: true, keepHeader: true, skip: 1)
+                                  .set{ pangolin_usher_result }
+            add_pangolin_usher_to_metadata(add_new_pangolin_lineages_to_metadata.out.metadata, pangolin_usher_result)
+            post_pangolin_metadata = add_pangolin_usher_to_metadata.out
+        } else {
+            post_pangolin_metadata = add_new_pangolin_lineages_to_metadata.out.metadata
+        }
+
         announce_summary(extract_sequences_for_pangolin.out.pangolin_fasta, add_new_pangolin_lineages_to_metadata.out.log)
     emit:
-        metadata = add_new_pangolin_lineages_to_metadata.out.metadata
+        metadata = post_pangolin_metadata
 }
 
 
