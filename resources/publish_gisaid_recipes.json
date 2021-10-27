@@ -3,14 +3,14 @@
     {
       "suffix": "all",
       "fasta": "gisaid",
-      "metadata_fields": ["sequence_name","country","edin_admin_1","edin_admin_2","edin_travel","edin_date_stamp","sample_date","safe_sample_date","epi_week","epi_day","lineage","lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict","covv_accession_id","covv_virus_name","covv_location","covv_add_host_info","covv_assembly_method","covv_gender","covv_host","covv_passage","covv_patient_age","covv_seq_technology","covv_specimen","covv_subm_date","is_uk","is_cog_uk","why_excluded","nucleotide_mutations"],
+      "metadata_fields": ["sequence_name","country","edin_admin_1","edin_admin_2","edin_travel","edin_date_stamp","sample_date","safe_sample_date","epi_week","epi_day","lineage","lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict","usher_lineage", "usher_lineages_version","covv_accession_id","covv_virus_name","covv_location","covv_add_host_info","covv_assembly_method","covv_gender","covv_host","covv_passage","covv_patient_age","covv_seq_technology","covv_specimen","covv_subm_date","is_uk","is_cog_uk","why_excluded","nucleotide_mutations"],
       "mutations": true,
       "where": "sample_date=covv_collection_date epi_week=edin_epi_week country=edin_admin_0"
     },
     {
       "suffix": "global",
       "fasta": "gisaid",
-      "metadata_fields": ["sequence_name","country","edin_admin_1","edin_admin_2","edin_travel","edin_date_stamp","sample_date","safe_sample_date","epi_week","epi_day","lineage","lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict","covv_accession_id","covv_virus_name","covv_location","covv_add_host_info","covv_assembly_method","covv_gender","covv_host","covv_passage","covv_patient_age","covv_seq_technology","covv_specimen","covv_subm_date","is_uk","is_cog_uk","why_excluded","nucleotide_mutations"],
+      "metadata_fields": ["sequence_name","country","edin_admin_1","edin_admin_2","edin_travel","edin_date_stamp","sample_date","safe_sample_date","epi_week","epi_day","lineage","lineages_version","lineage_conflict","lineage_ambiguity_score","scorpio_call","scorpio_support","scorpio_conflict","usher_lineage", "usher_lineages_version","covv_accession_id","covv_virus_name","covv_location","covv_add_host_info","covv_assembly_method","covv_gender","covv_host","covv_passage","covv_patient_age","covv_seq_technology","covv_specimen","covv_subm_date","is_uk","is_cog_uk","why_excluded","nucleotide_mutations"],
       "mutations": true,
       "exclude_cog": true,
       "where": "sample_date=covv_collection_date epi_week=edin_epi_week epi_day=edin_epi_day country=edin_admin_0"

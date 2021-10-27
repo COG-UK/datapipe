@@ -29,7 +29,9 @@ def prepare_for_pangolin(in_fasta, in_metadata, previous_metadata, out_fasta, ou
             "lineage_ambiguity_score": "ambiguity_score",
             "scorpio_call":"scorpio_call",
             "scorpio_support":"scorpio_support",
-            "scorpio_conflict":"scorpio_conflict"}
+            "scorpio_conflict":"scorpio_conflict",
+            "usher_lineage":"usher_lineage",
+            "usher_lineages_version": "usher_lineages_version"}
     lineage_dict = {}
 
     with open(previous_metadata, 'r', newline = '') as lineages_in:

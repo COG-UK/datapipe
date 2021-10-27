@@ -81,7 +81,7 @@ workflow preprocess_gisaid {
         gisaid_process_json(json_chunks)
         gisaid_add_columns_to_metadata(gisaid_process_json.out.fasta, gisaid_process_json.out.metadata)
         gisaid_process_json.out.fasta.collectFile(newLine: true).set{ fasta_result }
-        gisaid_add_columns_to_metadata.out.collectFile(newLine: true, keepHeader: true, skip: 1)
+        gisaid_add_columns_to_metadata.out.collectFile(newLine: false, keepHeader: true, skip: 1)
                                           .set{ metadata_result }
     emit:
         fasta = fasta_result

@@ -39,6 +39,7 @@ process combine_cog_gisaid {
                           submission_org_code submission_user collection_pillar is_pillar_2 is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
                           lineage lineages_version lineage_conflict lineage_ambiguity_score scorpio_call scorpio_support scorpio_conflict \
+                          usher_lineage usher_lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
                           unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
@@ -59,6 +60,7 @@ process combine_cog_gisaid {
                           submission_org_code submission_user collection_pillar is_pillar_2 is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
                           lineage lineages_version lineage_conflict lineage_ambiguity_score scorpio_call scorpio_support scorpio_conflict \
+                          usher_lineage usher_lineages_version \
                           source_age source_sex sample_type_collected sample_type_received swab_site \
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
                           unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
