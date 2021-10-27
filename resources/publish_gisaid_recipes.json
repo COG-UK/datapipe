@@ -37,7 +37,7 @@
       "exclude_cog": true
     },
     {
-      "suffix": "pango_designation",
+      "suffix": "pango_lineages",
       "data": "gisaid",
       "metadata_fields": ["sequence_name","gisaid_accession", "lineage", "lineages_version", "usher_lineage", "usher_lineages_version"],
       "where": "gisaid_accession=covv_accession_id"
