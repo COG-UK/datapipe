@@ -29,11 +29,12 @@ process uk_strip_header_digits_and_unalign {
     fasta_in = SeqIO.parse("${uk_fasta}", "fasta")
     with open("${uk_fasta.baseName}.header_stripped.fasta", 'w') as f:
         for record in fasta_in:
-            if not is_iupac(str(record.seq)):
+            seq = str(record.seq).replace('-','')
+            seq = seq.replace('?','N')
+            if not is_iupac(seq):
                 continue
             ID = record.description.split("|")[0]
             f.write(">" + ID + "\\n")
-            seq = str(record.seq).replace('-','')
             f.write(seq + "\\n")
     """
 }
