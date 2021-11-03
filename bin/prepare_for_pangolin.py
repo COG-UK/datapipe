@@ -27,6 +27,8 @@ def prepare_for_pangolin(in_fasta, in_metadata, previous_metadata, out_fasta, ou
             "lineages_version": "version",
             "lineage_conflict": "conflict",
             "lineage_ambiguity_score": "ambiguity_score",
+            "pangolin_version": "pangolin_version",
+            "pangoLEARN_version": "pangoLEARN_version",
             "scorpio_call":"scorpio_call",
             "scorpio_support":"scorpio_support",
             "scorpio_conflict":"scorpio_conflict",
@@ -50,6 +52,11 @@ def prepare_for_pangolin(in_fasta, in_metadata, previous_metadata, out_fasta, ou
             keys["lineages_version"] = "version"
         elif "pangoLEARN_version" in reader.fieldnames:
             keys["lineages_version"] =  "pangoLEARN_version"
+
+        if "lineage_conflict" in reader.fieldnames:
+            keys["lineage_conflict"] = "lineage_conflict"
+        if "lineage_ambiguity_score" in reader.fieldnames:
+            keys["lineage_ambiguity_score"] = "lineage_ambiguity_score"
 
         for row in reader:
             if row[taxon] in lineage_dict:
