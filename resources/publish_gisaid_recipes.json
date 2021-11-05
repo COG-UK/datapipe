@@ -35,13 +35,6 @@
       "metadata_fields": ["sequence_name"],
       "updown": true,
       "exclude_cog": true
-    },
-    {
-      "suffix": "pango_lineages",
-      "data": "gisaid",
-      "metadata_fields": ["sequence_name","gisaid_accession", "lineage", "scorpio_call", "lineages_version", "pangolin_version", "pangoLEARN_version"],
-      "where": "gisaid_accession=covv_accession_id",
-      "drop_index": "sequence_name"
     }
   ]
 }
