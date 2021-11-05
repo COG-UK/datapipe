@@ -202,6 +202,30 @@ process add_pangolin_usher_to_metadata {
     """
 }
 
+process cache_lineages_report {
+    /**
+    * Creates a map from sequence hash to pangolin report calls
+    * @input metadata
+    * @output metadata
+    */
+    publishDir "${publish_dir}/pangolin", pattern: "*.cache.csv", mode: 'copy'
+
+    input:
+    path fasta
+    path metadata
+
+    output:
+    path "${metadata.baseName}.cache.csv", emit: metadata
+
+    script:
+    """
+    $project_dir/../bin/cache_pangolin_report.py \
+        --in-fasta ${fasta} \
+        --in-metadata ${metadata} \
+        --out-metadata "${metadata.baseName}.cache.csv"
+    """
+}
+
 
 process announce_summary {
     /**
@@ -285,6 +309,11 @@ workflow pangolin {
             post_pangolin_metadata = pangolin_result
         }
         add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, post_pangolin_metadata)
+
+        if (params.cache_pangolin){
+            cache_lineages_report(extract_sequences_for_pangolin.out.pangolin_fasta, post_pangolin_metadata)
+        }
+
         announce_summary(extract_sequences_for_pangolin.out.pangolin_fasta, add_new_pangolin_lineages_to_metadata.out.log)
     emit:
         metadata = add_new_pangolin_lineages_to_metadata.out.metadata
