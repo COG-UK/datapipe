@@ -3,6 +3,7 @@
 nextflow.enable.dsl = 2
 
 project_dir = projectDir
+publish_dir = file(params.publish_dir)
 
 
 process check_for_pangolin_update {
@@ -126,7 +127,7 @@ process run_pangolin_usher {
     path fasta
 
     output:
-    path "pangolin/lineage_report.csv"
+    path "pangolin/usher_lineage_report.csv"
 
     script:
     if (params.skip_designation_hash)
@@ -134,6 +135,7 @@ process run_pangolin_usher {
         pangolin "${fasta}" \
             --outdir pangolin \
             --tempdir pangolin_tmp \
+            --outfile usher_lineage_report.csv \
             --usher \
             -t ${task.cpus} \
             --skip-designation-hash
@@ -143,6 +145,7 @@ process run_pangolin_usher {
         pangolin "${fasta}" \
             --outdir pangolin \
             --tempdir pangolin_tmp \
+            --outfile usher_lineage_report.csv \
             --usher \
             -t ${task.cpus}
         """
@@ -188,25 +191,14 @@ process add_pangolin_usher_to_metadata {
 
     script:
     """
-    if [[ \$(head -n1 ${metadata}) == *"fasta_header"* ]]; then
-        fastafunk add_columns \
+    fastafunk add_columns \
           --in-metadata ${metadata} \
           --in-data ${usher_report} \
-          --index-column fasta_header \
+          --index-column taxon \
           --join-on taxon \
           --new-columns usher_lineage usher_lineages_version \
           --where-column usher_lineage=lineage usher_lineages_version=version \
           --out-metadata "${metadata.baseName}.with_usher.csv"
-    else
-        fastafunk add_columns \
-          --in-metadata ${metadata} \
-          --in-data ${usher_report} \
-          --index-column edin_header \
-          --join-on taxon \
-          --new-columns usher_lineage usher_lineages_version \
-          --where-column usher_lineage=lineage usher_lineages_version=version \
-          --out-metadata "${metadata.baseName}.with_usher.csv"
-    fi
     """
 }
 
@@ -247,6 +239,30 @@ process announce_summary {
             """
 }
 
+
+process publish_metadata {
+    /**
+    * Publishes metadata csv for this category
+    * @input metadata
+    * @output metadata
+    */
+
+    publishDir "${publish_dir}", pattern: "*/*.csv", mode: 'copy'
+
+    input:
+    path metadata
+    val category
+
+    output:
+    path "${category}/pangolin_master.csv"
+
+    script:
+    """
+    mkdir -p ${category}
+    cp ${metadata} ${category}/pangolin_master.csv
+    """
+}
+
 workflow pangolin {
     take:
         in_fasta
@@ -259,20 +275,20 @@ workflow pangolin {
         run_pangolin(pangolin_chunks)
         run_pangolin.out.collectFile(newLine: true, keepHeader: true, skip: 1)
                         .set{ pangolin_result }
-        add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, pangolin_result)
         if (params.add_usher_pangolin) {
             run_pangolin_usher(pangolin_chunks)
             run_pangolin_usher.out.collectFile(newLine: true, keepHeader: true, skip: 1)
                                   .set{ pangolin_usher_result }
-            add_pangolin_usher_to_metadata(add_new_pangolin_lineages_to_metadata.out.metadata, pangolin_usher_result)
+            add_pangolin_usher_to_metadata(pangolin_result, pangolin_usher_result)
             post_pangolin_metadata = add_pangolin_usher_to_metadata.out
         } else {
-            post_pangolin_metadata = add_new_pangolin_lineages_to_metadata.out.metadata
+            post_pangolin_metadata = pangolin_result
         }
-
+        add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, post_pangolin_metadata)
         announce_summary(extract_sequences_for_pangolin.out.pangolin_fasta, add_new_pangolin_lineages_to_metadata.out.log)
     emit:
-        metadata = post_pangolin_metadata
+        metadata = add_new_pangolin_lineages_to_metadata.out.metadata
+        report = post_pangolin_metadata
 }
 
 
@@ -282,4 +298,5 @@ workflow {
     check_for_pangolin_update()
 
     pangolin(uk_fasta, uk_metadata, check_for_pangolin_update.out)
+    publish_metadata(pangolin.out.report, "pangolin")
 }
