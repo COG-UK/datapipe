@@ -44,7 +44,7 @@ process combine_cog_gisaid {
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
                           unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
-          --where-column epi_week=edin_epi_week epi_day=edin_epi_day country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1 \
+          --where-column epi_week=edin_epi_week epi_day=edin_epi_day country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1 published_date=sequencing_submission_date \
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
           --restrict --low-memory
@@ -65,7 +65,7 @@ process combine_cog_gisaid {
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
                           unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
-          --where-column adm1=edin_admin_1 travel_history=edin_travel \
+          --where-column adm1=edin_admin_1 travel_history=edin_travel published_date=covv_subm_date\
           --out-fasta "intermediate_gisaid.fa" \
           --out-metadata "intermediate_gisaid.csv" \
           --restrict --low-memory
