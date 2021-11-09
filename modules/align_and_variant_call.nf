@@ -38,6 +38,8 @@ process get_mutations {
     */
 
     cpus 4
+    label 'retry_increasing_mem'
+
 
     input:
     path sam

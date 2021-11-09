@@ -158,6 +158,8 @@ process add_new_pangolin_lineages_to_metadata {
     * @output metadata_updated
     */
 
+    label 'retry_increasing_mem'
+
     input:
     path metadata
     path pangolin_csv
