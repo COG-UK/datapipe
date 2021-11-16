@@ -96,7 +96,8 @@ process run_pangolin {
     path fasta
 
     output:
-    path "pangolin/lineage_report.csv"
+    path "pangolin/lineage_report.csv", emit: report
+    path "pangolin/sequences.aln.fasta", emit: alignment
 
     script:
     if (params.skip_designation_hash)
@@ -104,13 +105,15 @@ process run_pangolin {
         pangolin "${fasta}" \
             --outdir pangolin \
             --tempdir pangolin_tmp \
+            --alignment \
             --skip-designation-hash
         """
     else
         """
         pangolin "${fasta}" \
             --outdir pangolin \
-            --tempdir pangolin_tmp
+            --tempdir pangolin_tmp \
+            --alignment
         """
 }
 
@@ -299,8 +302,9 @@ workflow pangolin {
         extract_sequences_for_pangolin.out.pangolin_fasta.splitFasta( by: params.chunk_size, file: true )
                                                          .set{ pangolin_chunks }
         run_pangolin(pangolin_chunks)
-        run_pangolin.out.collectFile(newLine: true, keepHeader: true, skip: 1)
+        run_pangolin.out.report.collectFile(newLine: true, keepHeader: true, skip: 1)
                         .set{ pangolin_result }
+        run_pangolin.out.alignment.collectFile().set{ pangolin_alignment }
         if (params.add_usher_pangolin) {
             run_pangolin_usher(pangolin_chunks)
             run_pangolin_usher.out.collectFile(newLine: true, keepHeader: true, skip: 1)
@@ -313,7 +317,7 @@ workflow pangolin {
         add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, post_pangolin_metadata)
 
         if (params.cache_pangolin){
-            cache_lineages_report(extract_sequences_for_pangolin.out.pangolin_fasta, post_pangolin_metadata)
+            cache_lineages_report(pangolin_alignment, post_pangolin_metadata)
         }
 
         announce_summary(extract_sequences_for_pangolin.out.pangolin_fasta, add_new_pangolin_lineages_to_metadata.out.log)
