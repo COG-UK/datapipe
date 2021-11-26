@@ -16,13 +16,13 @@ process check_for_pangolin_update {
     script:
     if ( params.auto_update_pangolin )
         """
-        PANGO_VERSION=\$(pangolin -pv)
+        PANGO_VERSION=\$(pangolin --all-versions)
         echo \$PANGO_VERSION
         pangolin --update
         sleep 5s
-        NEW_PANGO_VERSION=\$(pangolin -pv)
+        NEW_PANGO_VERSION=\$(pangolin --all-versions)
         echo \$NEW_PANGO_VERSION
-        if [ "\$PANGO_VERSION" == "\$NEW_PANGO_VERSION" ]; then
+        if [[ "\$PANGO_VERSION" == "\$NEW_PANGO_VERSION" ]]; then
             PANGOLIN_UPDATED=false
         else
             PANGOLIN_UPDATED=true
