@@ -403,6 +403,8 @@ process add_constellations_to_metadata {
     */
 
     publishDir "${publish_dev}", pattern: "*/*.csv", mode: 'copy'
+ 
+    label 'retry_increasing_mem'
 
     input:
     path haplotyped

@@ -76,6 +76,8 @@ process remove_duplicates_by_date {
     * @output fasta_updated, metadata_updated
     */
 
+    label 'retry_increasing_mem'
+
     input:
     path fasta
     path metadata
