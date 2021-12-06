@@ -36,5 +36,21 @@
       "updown": true,
       "exclude_cog": true
     }
+  ],
+  "civet3": [
+    {
+      "suffix": "private",
+      "fasta": "gisaid",
+      "metadata_fields": ["sequence_name","gisaid_id","sample_date","epi_week","country","adm1","adm2","travel_history","lineage","lineages_version","scorpio_call"],
+      "where": "gisaid_id=covv_accession_id epi_week=edin_epi_week country=edin_admin_0 adm1=edin_admin_1 adm2=edin_admin_2 travel_history=edin_travel"
+    },
+    {
+      "suffix": "mutations",
+      "data": "gisaid",
+      "updown": true,
+      "metadata_fields": ["sequence_name", "query"],
+      "where": "query=sequence_name",
+      "drop_index": "sequence_name"
+    }
   ]
 }
