@@ -305,7 +305,8 @@ process add_nucleotide_mutations_to_metadata {
     * @input metadata, nucleotide_mutations
     * @output metadata
     */
-    label 'retry_increasing_mem'
+
+    memory { 1.GB * task.attempt + metadata.size() * 2.B }
 
     input:
     path metadata
@@ -404,7 +405,7 @@ process add_constellations_to_metadata {
 
     publishDir "${publish_dev}", pattern: "*/*.csv", mode: 'copy'
  
-    label 'retry_increasing_mem'
+    memory { 1.GB * task.attempt + classified.size() * 2.B }
 
     input:
     path haplotyped

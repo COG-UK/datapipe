@@ -76,7 +76,7 @@ process remove_duplicates_by_date {
     * @output fasta_updated, metadata_updated
     */
 
-    label 'retry_increasing_mem'
+    memory { 1.GB * task.attempt + metadata.size() * 2.B }    
 
     input:
     path fasta

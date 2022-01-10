@@ -304,6 +304,7 @@ process add_gisaid_geography_to_metadata {
     */
 
     publishDir "${publish_dev}/gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"gisaid_master.csv"}, overwrite: true
+    memory { 1.GB * task.attempt + combined_metadata.size() * 2.B }
 
     input:
     path combined_metadata
@@ -389,7 +390,7 @@ process publish_cog_global_recipes {
     publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
     publishDir "${publish_dir}/", pattern: "README", mode: 'copy', overwrite: false
 
-    memory {8.GB * task.attempt}
+    memory { 1.GB * task.attempt + combined_metadata.size() * 4.B }
     errorStrategy = { 'retry' }
     maxRetries 3
 
@@ -464,7 +465,7 @@ process publish_gisaid_recipes {
 
     publishDir "${publish_dir}/", pattern: "*/*.*", mode: 'copy', overwrite: false
 
-    memory {8.GB * task.attempt}
+    memory { 1.GB * task.attempt + gisaid_metadata.size() * 8.B }
     errorStrategy = { 'retry' }
     maxRetries 3
 

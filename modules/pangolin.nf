@@ -161,7 +161,7 @@ process add_new_pangolin_lineages_to_metadata {
     * @output metadata_updated
     */
 
-    label 'retry_increasing_mem'
+    memory { 1.GB * task.attempt + metadata.size() * 2.B }
 
     input:
     path metadata
