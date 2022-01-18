@@ -10,6 +10,7 @@ include { check_for_pangolin_update } from '../modules/pangolin.nf'
 include { deduplicate_cog_uk } from '../modules/deduplicate.nf'
 include { align_and_variant_call } from '../modules/align_and_variant_call.nf'
 include { filter_and_trim_cog_uk } from '../modules/filter_and_trim.nf'
+include { clean_geography_cog_uk } from '../modules/clean_geography.nf'
 include { publish_cog_global } from '../modules/publish_all.nf'
 
 workflow process_cog_uk {
@@ -24,11 +25,12 @@ workflow process_cog_uk {
       deduplicate_cog_uk(preprocess_cog_uk.out.fasta, pangolin.out.metadata)
       align_and_variant_call(deduplicate_cog_uk.out.fasta, deduplicate_cog_uk.out.metadata, "cog")
       filter_and_trim_cog_uk(align_and_variant_call.out.fasta, align_and_variant_call.out.metadata)
+      clean_geography_cog_uk(filter_and_trim_cog_uk.out.fasta, filter_and_trim_cog_uk.out.metadata)
     emit:
       unaligned_fasta = deduplicate_cog_uk.out.fasta
       aligned_fasta = align_and_variant_call.out.fasta
       trimmed_fasta = filter_and_trim_cog_uk.out.fasta
-      metadata = filter_and_trim_cog_uk.out.metadata
+      metadata = clean_geography_cog_uk.out.metadata
       mutations = align_and_variant_call.out.mutations
       constellations = align_and_variant_call.out.constellations
       updown = align_and_variant_call.out.updown
