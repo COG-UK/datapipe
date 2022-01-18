@@ -63,30 +63,6 @@ process filter_low_coverage_sequences {
 }
 
 
-process publish_master_metadata {
-    /**
-    * Publishes master metadata csv for this category
-    * @input metadata
-    * @output metadata
-    */
-
-    publishDir "${publish_dev}", pattern: "*/*.csv", mode: 'copy'
-
-    input:
-    path metadata
-    val category
-
-    output:
-    path "${category}/${category}_master.csv"
-
-    script:
-    """
-    mkdir -p ${category}
-    cp ${metadata} ${category}/${category}_master.csv
-    """
-}
-
-
 process trim_alignment {
     /**
     * Trims start and end of alignment
@@ -230,7 +206,6 @@ workflow filter_and_trim_gisaid {
             ch_fasta = trim_alignment.out
             ch_metadata = filter_low_coverage_sequences.out.metadata_updated
         }
-        publish_master_metadata(ch_metadata, "gisaid")
     emit:
         fasta = ch_fasta
         metadata = ch_metadata
@@ -253,7 +228,6 @@ workflow filter_and_trim_cog_uk {
             ch_fasta = trim_alignment.out
             ch_metadata = filter_low_coverage_sequences.out.metadata_updated
         }
-        publish_master_metadata(ch_metadata, "cog")
     emit:
         fasta = ch_fasta
         metadata = ch_metadata

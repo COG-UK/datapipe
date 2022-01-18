@@ -15,6 +15,7 @@ process combine_cog_gisaid {
     */
 
     publishDir "${publish_dev}/cog_gisaid", pattern: "*.fa", mode: 'copy'
+    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
 
     input:
     path uk_fasta
@@ -34,7 +35,7 @@ process combine_cog_gisaid {
           --index-column sequence_name \
           --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id source_id \
                           sequence_name sample_date safe_sample_date epi_week epi_day collection_date received_date published_date \
-                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
+                          country adm1 adm1_raw adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location utla utla_code suggested_adm2_grouping \
                           is_uk is_cog_uk \
                           submission_org_code submission_user collection_pillar is_pillar_2 is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
@@ -44,7 +45,7 @@ process combine_cog_gisaid {
                           ct_n_ct_value ct_n_test_kit ct_n_test_platform ct_n_test_target \
                           unmapped_genome_completeness duplicate why_excluded nucleotide_mutations \
                           uk_lineage microreact_lineage del_lineage del_introduction phylotype \
-          --where-column epi_week=edin_epi_week epi_day=edin_epi_day country=adm0 outer_postcode=adm2_private lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1 published_date=sequencing_submission_date \
+          --where-column epi_week=edin_epi_week epi_day=edin_epi_day country=adm0 lineage_support=probability lineages_version=pangoLEARN_version adm1_UK=adm1_raw published_date=sequencing_submission_date \
           --out-fasta "intermediate_cog.fa" \
           --out-metadata "intermediate_cog.csv" \
           --restrict --low-memory
@@ -55,7 +56,7 @@ process combine_cog_gisaid {
           --index-column sequence_name \
           --filter-column fasta_header covv_accession_id central_sample_id biosample_source_id secondary_identifier root_sample_id source_id \
                           sequence_name sample_date safe_sample_date epi_week epi_day collection_date received_date published_date \
-                          country adm1 adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location \
+                          country adm1 adm1_raw adm1_UK adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location utla utla_code suggested_adm2_grouping \
                           is_uk is_cog_uk \
                           submission_org_code submission_user collection_pillar is_pillar_2 is_surveillance is_community is_hcw \
                           is_travel_history travel_history \
@@ -152,202 +153,6 @@ process combine_updown {
     cp ${uk_updown} tmp.csv
     tail -n+1 ${gisaid_updown} >> tmp.csv
     grep -v ",,,," tmp.csv > "cog_gisaid_updown.csv"
-    """
-}
-
-
-process uk_geography {
-    /**
-    * Cleans up geography
-    * @input uk_fasta, uk_metadata
-    * @output geography_metadata
-    * @params geography_utils
-    */
-
-    memory { 1.GB * task.attempt + uk_fasta.size() * 1.B }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
-    maxRetries = 1
-
-    publishDir "${publish_dev}/", pattern: "geography/*.csv", mode: 'copy'
-    publishDir "${publish_dev}/", pattern: "geography/*.txt", mode: 'copy'
-
-    input:
-    path uk_fasta
-    path uk_metadata
-
-    output:
-    path "geography/geography.csv", emit: geography
-    path "geography/*.csv"
-    path "geography/*.txt"
-
-    script:
-    """
-    mkdir geography
-    mkdir geography_tmp
-
-    fastafunk fetch \
-      --in-fasta ${uk_fasta} \
-      --in-metadata ${uk_metadata} \
-      --index-column sequence_name \
-      --filter-column central_sample_id sequence_name sample_date epi_week \
-                      adm0 adm1 adm2 adm2_private \
-      --out-fasta geography_tmp/fetch.fa \
-      --out-metadata geography_tmp/fetch.csv \
-      --restrict
-
-    $project_dir/../bin/geography_cleaning/geography_cleaning.py \
-      --metadata geography_tmp/fetch.csv \
-      --country-col adm0 \
-      --adm1-col adm1 \
-      --adm2-col adm2 \
-      --outer-postcode-col adm2_private \
-      --mapping-utils-dir ${geography_utils} \
-      --epiweek-col epi_week \
-      --outdir geography
-
-    rm -rf geography_tmp
-    """
-}
-
-
-process add_uk_geography_to_metadata {
-    /**
-    * Adds UK geography to combined metadata
-    * @input combined_metadata, geography_metadata
-    * @output metadata
-    */
-
-    publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
-
-    input:
-    path combined_metadata
-    path geography_metadata
-
-    output:
-    path "cog_gisaid_geography.csv", emit: metadata
-
-    script:
-    """
-    fastafunk add_columns \
-          --in-metadata ${combined_metadata} \
-          --in-data ${geography_metadata} \
-          --index-column sequence_name \
-          --join-on sequence_name \
-          --force-overwrite \
-          --new-columns adm1 adm1_raw adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location utla utla_code suggested_adm2_grouping \
-          --out-metadata "cog_gisaid_geography.csv"
-    """
-}
-
-
-process gisaid_geography {
-    /**
-    * Cleans up geography
-    * @input fasta, metadata
-    * @output geography_metadata
-    * @params geography_utils
-    */
-
-    memory { 1.GB * task.attempt + fasta.size() * 1.B }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
-    maxRetries = 1
-
-    publishDir "${publish_dev}/", pattern: "geography/*.csv", mode: 'copy'
-    publishDir "${publish_dev}/", pattern: "geography/*.txt", mode: 'copy'
-
-    input:
-    path fasta
-    path metadata
-
-    output:
-    path "geography/geography.csv", emit: geography
-    path "geography/*.csv"
-    path "geography/*.txt"
-
-    script:
-    """
-    mkdir geography
-    mkdir geography_tmp
-
-    fastafunk fetch \
-      --in-fasta ${fasta} \
-      --in-metadata ${metadata} \
-      --index-column sequence_name \
-      --filter-column gisaid_accession sequence_name sample_date epi_week \
-                      adm0 adm1 adm2 adm2_private \
-      --where-column gisaid_accession=covv_accession_id epi_week=edin_epi_week adm0=edin_admin_0 adm1=edin_admin_1 adm2=edin_admin_2\
-      --out-fasta geography_tmp/fetch.fa \
-      --out-metadata geography_tmp/fetch.csv \
-      --restrict
-
-    $project_dir/../bin/geography_cleaning/geography_cleaning.py \
-      --metadata geography_tmp/fetch.csv \
-      --country-col adm0 \
-      --adm1-col adm1 \
-      --adm2-col adm2 \
-      --outer-postcode-col adm2_private \
-      --mapping-utils-dir ${geography_utils} \
-      --epiweek-col epi_week \
-      --sample-id-col gisaid_accession \
-      --outdir geography
-
-    rm -rf geography_tmp
-    """
-}
-
-
-process add_gisaid_geography_to_metadata {
-    /**
-    * Adds GISAID geography to combined metadata
-    * @input combined_metadata, geography_metadata
-    * @output metadata
-    */
-
-    publishDir "${publish_dev}/gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"gisaid_master.csv"}, overwrite: true
-    memory { 1.GB * task.attempt + combined_metadata.size() * 2.B }
-
-    input:
-    path combined_metadata
-    path geography_metadata
-
-    output:
-    path "gisaid_geography.csv", emit: metadata
-
-    script:
-    """
-    fastafunk add_columns \
-          --in-metadata ${combined_metadata} \
-          --in-data ${geography_metadata} \
-          --index-column sequence_name \
-          --join-on sequence_name \
-          --force-overwrite \
-          --new-columns edin_admin_0 edin_admin_1 edin_admin_2 adm1 adm1_raw adm2 outer_postcode adm2_raw adm2_source NUTS1 region latitude longitude location safe_location utla utla_code suggested_adm2_grouping \
-          --where-column edin_admin_0=adm0 edin_admin_1=adm1 edin_admin_2=adm2 \
-          --out-metadata "gisaid_geography.csv"
-    """
-}
-
-
-process make_delta_by_utla_summary {
-    /**
-    * Summarizes delta counts by utla
-    * @input metadata
-    * @output csv
-    */
-
-    publishDir "${publish_dir}/cog", pattern: "*.csv", mode: 'copy', overwrite: false
-
-    input:
-    path metadata
-
-    output:
-    path "UTLA_genome_counts_${params.date}.csv"
-
-    script:
-    """
-    $project_dir/../bin/summarise_genomes_by_utla.py \
-      --metadata ${metadata} \
-      --date ${params.date}
     """
 }
 
@@ -542,16 +347,13 @@ workflow publish_cog_global {
         combine_mutations(uk_mutations, gisaid_mutations)
         combine_constellations(uk_constellations, gisaid_constellations)
         combine_updown(uk_updown, gisaid_updown)
-        uk_geography(uk_fasta, uk_metadata)
-        add_uk_geography_to_metadata(combine_cog_gisaid.out.metadata,uk_geography.out.geography)
-        make_delta_by_utla_summary(add_uk_geography_to_metadata.out.metadata)
         split_recipes(cog_global_recipes)
         recipe_ch = split_recipes.out.flatten()
         uk_unaligned_fasta.combine(uk_aligned_fasta)
                           .combine(uk_fasta)
                           .combine(combine_cog_gisaid.out.fasta)
                           .combine(uk_metadata)
-                          .combine(add_uk_geography_to_metadata.out.metadata)
+                          .combine(combine_cog_gisaid.out.metadata)
                           .combine(combine_mutations.out)
                           .combine(combine_constellations.out)
                           .combine(combine_updown.out)
@@ -575,16 +377,9 @@ workflow publish_gisaid {
         gisaid_constellations
         gisaid_updown
     main:
-        if ( params.geography ){
-            gisaid_geography(gisaid_fasta, gisaid_metadata)
-            add_gisaid_geography_to_metadata(gisaid_metadata,gisaid_geography.out.geography)
-            add_gisaid_geography_to_metadata.out.metadata.set{ new_gisaid_metadata }
-        } else {
-            new_gisaid_metadata = gisaid_metadata
-        }
         split_recipes(gisaid_recipes)
         recipe_ch = split_recipes.out.flatten()
-        gisaid_fasta.combine(new_gisaid_metadata)
+        gisaid_fasta.combine(gisaid_metadata)
                     .combine(gisaid_mutations)
                     .combine(gisaid_constellations)
                     .combine(gisaid_updown)
