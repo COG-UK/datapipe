@@ -355,7 +355,7 @@ process haplotype_constellations {
       --input ${alignment} \
       --output "${alignment.baseName}.haplotyped.csv" \
       --output-counts \
-      --constellations ${constellations}/*.json
+      -n ${params.constellations}
 
     if [[ \$(grep ">" "${alignment}" | wc -l) != \$(tail -n+2 "${alignment.baseName}.haplotyped.csv" | wc -l) ]]
             then
@@ -385,7 +385,7 @@ process classify_constellations {
     scorpio classify \
       --input ${alignment} \
       --output "${alignment.baseName}.classified.csv" \
-      --constellations ${constellations}/*.json
+      -n ${params.constellations}
 
     if [[ \$(grep ">" "${alignment}" | wc -l) != \$(tail -n+2 "${alignment.baseName}.classified.csv" | wc -l) ]]
                 then
@@ -405,7 +405,7 @@ process add_constellations_to_metadata {
 
     publishDir "${publish_dev}", pattern: "*/*.csv", mode: 'copy'
  
-    memory { 1.GB * task.attempt + classified.size() * 2.B }
+    memory { task.attempt * (classified.size() + haplotyped.size()) * 9.B }
 
     input:
     path haplotyped
@@ -495,9 +495,9 @@ workflow align_and_variant_call {
         add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
 
         haplotype_constellations(alignment.out)
-        haplotype_constellations.out.collectFile(newLine: false).set{ haplotype_result }
+        haplotype_constellations.out.collectFile(newLine: false, keepHeader: true, skip: 1).set{ haplotype_result }
         classify_constellations(alignment.out)
-        classify_constellations.out.collectFile(newLine: false).set{ classify_result }
+        classify_constellations.out.collectFile(newLine: false, keepHeader: true, skip: 1).set{ classify_result }
 
         add_constellations_to_metadata(haplotype_result, classify_result, category)
         announce_summary(in_fasta, alignment_result)
@@ -515,7 +515,6 @@ dels = file(params.dels)
 reference_fasta = file(params.reference_fasta)
 reference_genbank = file(params.reference_genbank)
 WH04_fasta = file(params.WH04_fasta)
-constellations = file(params.constellations)
 
 workflow {
     uk_fasta = Channel.fromPath(params.uk_fasta)
