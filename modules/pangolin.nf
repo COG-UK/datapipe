@@ -161,7 +161,7 @@ process add_new_pangolin_lineages_to_metadata {
     * @output metadata_updated
     */
 
-    memory { 1.GB * task.attempt + metadata.size() * 2.B }
+    memory { task.attempt * metadata.size() * 3.B }
 
     input:
     path metadata
@@ -304,7 +304,6 @@ workflow pangolin {
         run_pangolin(pangolin_chunks)
         run_pangolin.out.report.collectFile(newLine: true, keepHeader: true, skip: 1)
                         .set{ pangolin_result }
-        run_pangolin.out.alignment.collectFile().set{ pangolin_alignment }
         if (params.add_usher_pangolin) {
             run_pangolin_usher(pangolin_chunks)
             run_pangolin_usher.out.collectFile(newLine: true, keepHeader: true, skip: 1)
@@ -317,7 +316,7 @@ workflow pangolin {
         add_new_pangolin_lineages_to_metadata(extract_sequences_for_pangolin.out.metadata_with_previous, post_pangolin_metadata)
 
         if (params.cache_pangolin){
-            cache_lineages_report(pangolin_alignment, post_pangolin_metadata)
+            cache_lineages_report(in_fasta, post_pangolin_metadata)
         }
 
         announce_summary(extract_sequences_for_pangolin.out.pangolin_fasta, add_new_pangolin_lineages_to_metadata.out.log)
