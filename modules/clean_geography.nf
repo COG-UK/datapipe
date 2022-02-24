@@ -69,6 +69,7 @@ process add_uk_geography_to_metadata {
     */
 
     publishDir "${publish_dev}/cog_gisaid", pattern: "*.csv", mode: 'copy', saveAs: {"cog_gisaid_master.csv"}
+    memory { 1.GB * task.attempt + uk_metadata.size() * 2.B }
 
     input:
     path uk_metadata
