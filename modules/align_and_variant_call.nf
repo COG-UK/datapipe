@@ -334,6 +334,41 @@ process add_nucleotide_mutations_to_metadata {
     """
 }
 
+process add_ambiguities_to_metadata {
+    /**
+    * Adds nucleotide mutations to metadata
+    * @input metadata, nucleotide_mutations
+    * @output metadata
+    */
+
+    memory { 1.GB * task.attempt + metadata.size() * 2.B }
+
+    input:
+    path metadata
+    path updown
+
+    output:
+    path "${metadata.baseName}.with_ambiguities.csv"
+
+    script:
+    """
+    fastafunk add_columns \
+          --in-metadata ${metadata} \
+          --in-data ${updown} \
+          --index-column sequence_name \
+          --join-on querye \
+          --new-columns ambiguities \
+          --out-metadata "${metadata.baseName}.with_ambiguities.csv"
+
+    if [[ \$(cat "${metadata}" | wc -l) != \$(cat "${metadata.baseName}.with_ambiguities.csv" | wc -l) ]]
+        then
+            echo \$(cat "${metadata}" | wc -l)
+            echo \$(cat "${metadata.baseName}.with_ambiguities.csv" | wc -l)
+            exit 1
+        fi
+    """
+}
+
 
 process haplotype_constellations {
     /**
@@ -493,6 +528,7 @@ workflow align_and_variant_call {
         type_AAs_and_dels(alignment_result, get_mutations.out, category)
         get_nuc_mutations(get_snps.out, get_indels.out.deletions, get_indels.out.insertions)
         add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
+        add_ambiguities_to_metadata(type_AAs_and_dels.out, get_updown.out)
 
         haplotype_constellations(alignment.out)
         haplotype_constellations.out.collectFile(newLine: false, keepHeader: true, skip: 1).set{ haplotype_result }
@@ -502,7 +538,7 @@ workflow align_and_variant_call {
         add_constellations_to_metadata(haplotype_result, classify_result, category)
         announce_summary(in_fasta, alignment_result)
     emit:
-        mutations = type_AAs_and_dels.out
+        mutations = add_ambiguities_to_metadata.out
         constellations = add_constellations_to_metadata.out
         fasta = alignment_result
         metadata = add_nucleotide_mutations_to_metadata.out
