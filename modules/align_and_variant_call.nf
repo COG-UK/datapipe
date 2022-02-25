@@ -170,19 +170,15 @@ process type_AAs_and_dels {
     * @params reference_fasta, del_file, aa_file
     */
 
-    publishDir "${publish_dev}/", pattern: "*/*.csv", mode: 'copy'
-
     input:
     path alignment
     path metadata
-    val category
 
     output:
-    path "${category}/${category}_mutations.csv"
+    path "${metadata.baseName}.aas_dels.csv"
 
     script:
     """
-    mkdir -p ${category}
     $project_dir/../bin/type_aas_and_dels.py \
       --in-fasta ${alignment} \
       --in-metadata ${metadata} \
@@ -192,12 +188,12 @@ process type_AAs_and_dels {
       --dels ${dels} \
       --index-column query
     sed "s/query/sequence_name/g" "mutations.tmp.csv" > mutations.tmp2.csv
-    sed "s/variants/mutations/g" "mutations.tmp2.csv" > ${category}/${category}_mutations.csv
+    sed "s/variants/mutations/g" "mutations.tmp2.csv" > "${metadata.baseName}.aas_dels.csv"
 
-    if [[ \$(cat "${metadata}" | wc -l) != \$(cat "${category}/${category}_mutations.csv" | wc -l) ]]
+    if [[ \$(cat "${metadata}" | wc -l) != \$(cat "${metadata.baseName}.aas_dels.csv" | wc -l) ]]
         then
             echo \$(cat "${metadata}" | wc -l)
-            echo \$(cat "${category}/${category}_mutations.csv" | wc -l)
+            echo \$(cat "${metadata.baseName}.aas_dels.csv" | wc -l)
             exit 1
         fi
     """
@@ -342,28 +338,31 @@ process add_ambiguities_to_metadata {
     */
 
     memory { 1.GB * task.attempt + metadata.size() * 2.B }
+    publishDir "${publish_dev}/", pattern: "*/*.csv", mode: 'copy'
 
     input:
     path metadata
     path updown
+    val category
 
     output:
-    path "${metadata.baseName}.with_ambiguities.csv"
+    path "${category}/${category}_mutations.csv"
 
     script:
     """
+    mkdir -p ${category}
     fastafunk add_columns \
           --in-metadata ${metadata} \
           --in-data ${updown} \
           --index-column sequence_name \
-          --join-on querye \
+          --join-on query \
           --new-columns ambiguities \
-          --out-metadata "${metadata.baseName}.with_ambiguities.csv"
+          --out-metadata "${category}/${category}_mutations.csv"
 
-    if [[ \$(cat "${metadata}" | wc -l) != \$(cat "${metadata.baseName}.with_ambiguities.csv" | wc -l) ]]
+    if [[ \$(cat "${metadata}" | wc -l) != \$(cat "${category}/${category}_mutations.csv" | wc -l) ]]
         then
             echo \$(cat "${metadata}" | wc -l)
-            echo \$(cat "${metadata.baseName}.with_ambiguities.csv" | wc -l)
+            echo \$(cat "${category}/${category}_mutations.csv" | wc -l)
             exit 1
         fi
     """
@@ -525,10 +524,10 @@ workflow align_and_variant_call {
 
         get_snps(alignment_result, category)
         get_updown(alignment_result, category)
-        type_AAs_and_dels(alignment_result, get_mutations.out, category)
+        type_AAs_and_dels(alignment_result, get_mutations.out)
         get_nuc_mutations(get_snps.out, get_indels.out.deletions, get_indels.out.insertions)
         add_nucleotide_mutations_to_metadata(in_metadata, get_nuc_mutations.out)
-        add_ambiguities_to_metadata(type_AAs_and_dels.out, get_updown.out)
+        add_ambiguities_to_metadata(type_AAs_and_dels.out, get_updown.out, category)
 
         haplotype_constellations(alignment.out)
         haplotype_constellations.out.collectFile(newLine: false, keepHeader: true, skip: 1).set{ haplotype_result }
