@@ -203,7 +203,8 @@ process add_previous_uk_lineage_to_metadata {
     * @input metadata
     * @output metadata
     */
-    label 'retry_increasing_mem'
+
+    memory { 1.GB * task.attempt + metadata.size() * 2.B }
 
     input:
     path metadata
