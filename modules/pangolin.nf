@@ -92,12 +92,14 @@ process run_pangolin {
     * @output pangolin_fasta
     */
 
+    cpus 4
+
     input:
     path fasta
 
     output:
     path "pangolin/lineage_report.csv", emit: report
-    path "pangolin/sequences.aln.fasta", emit: alignment
+    path "pangolin/alignment.fasta", emit: alignment
 
     script:
     if (params.skip_designation_hash)
@@ -106,14 +108,18 @@ process run_pangolin {
             --outdir pangolin \
             --tempdir pangolin_tmp \
             --alignment \
-            --skip-designation-hash
+            --skip-designation-hashi \
+            -t ${task.cpus} \
+            --analysis-mode fast
         """
     else
         """
         pangolin "${fasta}" \
             --outdir pangolin \
             --tempdir pangolin_tmp \
-            --alignment
+            --alignment \
+            -t ${task.cpus} \
+            --analysis-mode fast
         """
 }
 
@@ -139,7 +145,7 @@ process run_pangolin_usher {
             --outdir pangolin \
             --tempdir pangolin_tmp \
             --outfile usher_lineage_report.csv \
-            --usher \
+            --analysis-mode usher \
             -t ${task.cpus} \
             --skip-designation-hash
         """
@@ -149,7 +155,7 @@ process run_pangolin_usher {
             --outdir pangolin \
             --tempdir pangolin_tmp \
             --outfile usher_lineage_report.csv \
-            --usher \
+            --analysis-mode usher \
             -t ${task.cpus}
         """
 }
