@@ -19,14 +19,16 @@ workflow process_cog_uk {
       uk_metadata
       uk_accessions
       pangolin_updated
+      uk_pag
     main:
-      preprocess_cog_uk(uk_fasta, uk_metadata, uk_accessions)
+      preprocess_cog_uk(uk_fasta, uk_metadata, uk_accessions, uk_pag)
       pangolin(preprocess_cog_uk.out.fasta, preprocess_cog_uk.out.metadata, pangolin_updated)
       deduplicate_cog_uk(preprocess_cog_uk.out.fasta, pangolin.out.metadata)
       align_and_variant_call(deduplicate_cog_uk.out.fasta, deduplicate_cog_uk.out.metadata, "cog")
       filter_and_trim_cog_uk(align_and_variant_call.out.fasta, align_and_variant_call.out.metadata)
       clean_geography_cog_uk(filter_and_trim_cog_uk.out.fasta, filter_and_trim_cog_uk.out.metadata)
     emit:
+       preprocess_cog_uk.out.metadata
       unaligned_fasta = deduplicate_cog_uk.out.fasta
       aligned_fasta = align_and_variant_call.out.fasta
       trimmed_fasta = filter_and_trim_cog_uk.out.fasta
@@ -42,12 +44,14 @@ workflow {
     ch_uk_fasta = Channel.fromPath(params.uk_fasta)
     ch_uk_metadata = Channel.fromPath(params.uk_metadata)
     ch_uk_accessions = Channel.fromPath(params.uk_accessions)
+    ch_uk_pag = Channel.fromPath(params.uk_pag)
 
     check_for_pangolin_update()
     process_cog_uk(ch_uk_fasta,
                    ch_uk_metadata,
                    ch_uk_accessions,
-                   check_for_pangolin_update.out)
+                   check_for_pangolin_update.out,
+                   ch_uk_pag)
 
     ch_gisaid_fasta = Channel.fromPath(params.gisaid_fasta)
     ch_gisaid_metadata = Channel.fromPath(params.gisaid_metadata)
